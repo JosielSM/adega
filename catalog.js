@@ -48,7 +48,7 @@ document.querySelector('#close-cart').onclick=()=>dialog.close();
 document.querySelector('#checkout').onclick=async event=>{
  const button=event.currentTarget;button.disabled=true;button.textContent='Conferindo pedido…';feedback.textContent='';
  try{const result=await load();if(!result.ok||result.changed||!cart.size||!/^55\d{10,11}$/.test(whatsapp))return;
- const text=orderMessage(storeName,[...cart.values()],document.querySelector('#cart-notes').value);
+ const text=orderMessage([...cart.values()]);
  location.assign('https://wa.me/'+whatsapp+'?text='+encodeURIComponent(text));
  }finally{button.textContent='Finalizar pelo WhatsApp';renderCart();}
 };
