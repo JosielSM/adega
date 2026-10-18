@@ -46,15 +46,14 @@ search.oninput=render;category.onchange=render;retry.onclick=load;
 document.querySelector('#open-cart').onclick=()=>{renderCart();dialog.showModal();};
 document.querySelector('#close-cart').onclick=()=>dialog.close();
 document.querySelector('#checkout').onclick=async event=>{
- const addressInput=document.querySelector('#delivery-address');
- const address=addressInput.value.trim();
- addressInput.setCustomValidity(address.length<10?'Informe rua, número, bairro e cidade para a entrega.':'');
- if(!addressInput.reportValidity()){feedback.textContent='Preencha o endereço de entrega antes de continuar.';addressInput.focus();return;}
+ const addressFields=['delivery-neighborhood','delivery-street','delivery-number'].map(id=>document.getElementById(id));
+ for(const input of addressFields){input.setCustomValidity(input.value.trim()?'':'Preencha este campo do endereço.');if(!input.reportValidity()){feedback.textContent='Preencha bairro, rua e número antes de continuar.';input.focus();return;}}
+ const address=`Bairro: ${addressFields[0].value.trim()}\nRua: ${addressFields[1].value.trim()}\nNúmero: ${addressFields[2].value.trim()}`;
  const button=event.currentTarget;button.disabled=true;button.textContent='Conferindo pedido…';feedback.textContent='';
  try{const result=await load();if(!result.ok||result.changed||!cart.size||!/^55\d{10,11}$/.test(whatsapp))return;
  const text=orderMessage([...cart.values()],address);
  location.assign('https://wa.me/'+whatsapp+'?text='+encodeURIComponent(text));
  }finally{button.textContent='Finalizar pelo WhatsApp';renderCart();}
 };
-document.querySelector('#delivery-address').oninput=event=>event.target.setCustomValidity('');
+document.querySelectorAll('.delivery-fields input').forEach(input=>input.oninput=()=>input.setCustomValidity(''));
 setInterval(()=>{if(!document.hidden&&!dialog.open)load();},30000);window.addEventListener('online',load);load();
