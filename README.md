@@ -43,7 +43,7 @@ npx wrangler secret put SUPABASE_PUBLISHABLE_KEY
 npm run deploy
 ```
 
-Informe os valores nos prompts. O build copia apenas index.html, styles.css e app.js para dist. SQL, fontes do servidor e credenciais não são assets públicos. A publicação usa o Worker `adega`, configurado em wrangler.jsonc.
+Informe os valores nos prompts. O build copia somente os arquivos públicos index.html, styles.css, app.js, visual.js e a fotografia assets/adega-bar.png para dist. SQL, fontes do servidor e credenciais não são assets públicos. A publicação usa o Worker `adega`, configurado em wrangler.jsonc.
 
 ## Verificar
 
@@ -69,3 +69,7 @@ O download JSON exporta os registros da conta para consulta. A restauração loc
 - [Cloudflare Workers Static Assets](https://developers.cloudflare.com/workers/static-assets/binding/)
 - [Boas práticas de Workers](https://developers.cloudflare.com/workers/best-practices/workers-best-practices/)
 - [Supabase Row Level Security](https://supabase.com/docs/guides/database/postgres/row-level-security)
+
+## Identidade visual
+
+Paleta azul petróleo, marrom e fundo claro, com fotografia própria gerada para a Adega. A faixa usa parallax suave na rolagem, desativado quando o dispositivo pede movimento reduzido. A imagem é servida pelo próprio Worker.

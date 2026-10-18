@@ -4,7 +4,7 @@ Atualizado em 18/10/2026.
 
 - Worker Cloudflare: `adega`.
 - Endereço: https://adega.santosjosiel2003.workers.dev
-- Versão publicada: `a77605ab-20a7-4461-bbb9-d336ffe9a2e9`.
+- Versão publicada: `9fc19fc1-ace6-4e19-a883-81a0b5746c04`.
 - HTML, JavaScript e CSS públicos verificados com HTTP 200.
 - Testes locais: 10 aprovados, incluindo a migração em Postgres embarcado.
 
@@ -27,3 +27,7 @@ Com confirmação explícita do proprietário, foram removidos somente o produto
 A senha não foi solicitada nem registrada no chat ou no repositório. O usuário fez a autenticação diretamente na interface.
 
 Não registrar senhas, tokens administrativos ou chaves privadas neste arquivo.
+
+## Atualização visual
+
+Publicada a identidade azul petróleo e marrom, com fotografia própria em assets/adega-bar.png, servida pelo Worker, e parallax em visual.js. Revisados layouts móvel e desktop (1440 px), carregamento da imagem e ausência de transbordamento horizontal. O deslocamento da imagem foi confirmado durante a rolagem. Movimento reduzido desativa a animação. Os 10 testes existentes continuam aprovados.
