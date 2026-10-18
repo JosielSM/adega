@@ -40,11 +40,19 @@
     try {
       if (!['image/png','image/jpeg','image/webp'].includes(file.type) || file.size > 5*1024*1024) throw Error('Escolha PNG, JPG ou WebP de até 5 MB.');
       bitmap = await createImageBitmap(file);
-      const canvas = document.createElement('canvas'); canvas.width = canvas.height = 192;
-      const context = canvas.getContext('2d'); const scale = Math.min(192/bitmap.width,192/bitmap.height);
-      context.drawImage(bitmap,(192-bitmap.width*scale)/2,(192-bitmap.height*scale)/2,bitmap.width*scale,bitmap.height*scale);
-      const logo = canvas.toDataURL('image/png');
-      if (logo.length > 65536) throw Error('A imagem ficou muito detalhada. Escolha uma logo mais simples.');
+      const canvas = document.createElement('canvas');
+      let logo;
+      // Preserve transparency and fit detailed artwork automatically instead of
+      // requiring the user to simplify their company identity.
+      for (const size of [192,160,128,96,64]) {
+        canvas.width = canvas.height = size;
+        const context = canvas.getContext('2d');
+        context.imageSmoothingQuality = 'high';
+        const scale = Math.min(size/bitmap.width,size/bitmap.height);
+        context.drawImage(bitmap,(size-bitmap.width*scale)/2,(size-bitmap.height*scale)/2,bitmap.width*scale,bitmap.height*scale);
+        logo = canvas.toDataURL('image/png');
+        if (logo.length <= 65536) break;
+      }
       if (generation !== sessionGeneration) return;
       draftLogo = logo; preview.src = logo;
     } catch(error) {feedback.textContent = error.message || 'Não foi possível abrir a imagem.';}
