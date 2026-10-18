@@ -92,3 +92,12 @@ test('catalog settings need authentication and invalid links reveal nothing',asy
   assert.equal((await worker.fetch(new Request('https://adega.example/api/catalog/settings'),env)).status,401);
   assert.equal((await worker.fetch(new Request('https://adega.example/api/catalog?loja=invalid'),env)).status,404);
 });
+
+test('WhatsApp contact is normalized and saved only for authenticated account',async t=>{
+ t.mock.method(globalThis,'fetch',async(url,options)=>{
+  assert.match(url,/rpc\/adega_catalog_contact$/);assert.equal(options.headers.Authorization,'Bearer account-a');
+  assert.deepEqual(JSON.parse(options.body),{p_whatsapp:'5511999999999'});return Response.json({whatsapp:'5511999999999',enabled:false});
+ });
+ assert.equal((await worker.fetch(post('catalog/settings',{whatsapp:'(11) 99999-9999',owner_id:'other'},{cookie:'adega_session=account-a'}),env)).status,200);
+ assert.equal((await worker.fetch(post('catalog/settings',{whatsapp:'123'},{cookie:'adega_session=account-a'}),env)).status,400);
+});

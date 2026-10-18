@@ -11,7 +11,7 @@ test('two stores: direct RLS, ownership injection, all commands, reports and ide
       create table auth.users(id uuid primary key);
       create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
       grant usage on schema auth to authenticated,anon;`);
-    for(const file of ['001_adega.sql','002_account_isolation.sql','003_company_profile.sql','004_public_catalog.sql'])await db.exec(await readFile(new URL('../supabase/migrations/'+file,import.meta.url),'utf8'));
+    for(const file of ['001_adega.sql','002_account_isolation.sql','003_company_profile.sql','004_public_catalog.sql','005_catalog_whatsapp.sql'])await db.exec(await readFile(new URL('../supabase/migrations/'+file,import.meta.url),'utf8'));
     const a=randomUUID(),b=randomUUID(),request=randomUUID();
     await db.query('insert into auth.users values($1),($2)',[a,b]);
     const asUser=async id=>{await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[id]);await db.exec('set role authenticated');};
@@ -62,7 +62,7 @@ test('two stores: direct RLS, ownership injection, all commands, reports and ide
     await db.exec('set role anon');
     const publicA=(await db.query('select public.adega_public_catalog($1) as result',[catalogA.slug])).rows[0].result;
     assert.equal(publicA.name,'Loja A');assert.equal(publicA.products.length,1);
-    assert.deepEqual(Object.keys(publicA.products[0]).sort(),['brand','category','name','price']);
+    assert.deepEqual(Object.keys(publicA.products[0]).sort(),['brand','category','id','name','price']);
     assert.equal(publicA.products[0].name,'Bebida A');
     await assert.rejects(db.query('select * from public.adega_catalogs'),/permission denied/);
     await assert.rejects(db.query('select public.adega_catalog_configure(true)'),/permission denied/);

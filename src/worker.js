@@ -108,6 +108,13 @@ export default {
       if(url.pathname === '/api/catalog/settings') {
         if(request.method==='GET')return json(await supabase(env,'/rest/v1/rpc/adega_catalog_settings',token,{}));
         const data=await body(request);
+        if(Object.hasOwn(data,'whatsapp')) {
+          if(typeof data.whatsapp!=='string')throw new ApiError(400,'Informe um WhatsApp válido com DDD.');
+          let number=data.whatsapp.replace(/\D/g,'');
+          if(number.length===10||number.length===11)number='55'+number;
+          if(number&&!/^55\d{10,11}$/.test(number))throw new ApiError(400,'Informe um WhatsApp brasileiro com DDD.');
+          return json(await supabase(env,'/rest/v1/rpc/adega_catalog_contact',token,{p_whatsapp:number}));
+        }
         if(typeof data.enabled!=='boolean')throw new ApiError(400,'Informe se deseja publicar o catálogo.');
         return json(await supabase(env,'/rest/v1/rpc/adega_catalog_configure',token,{p_enabled:data.enabled}));
       }

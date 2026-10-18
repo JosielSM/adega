@@ -15,3 +15,4 @@ await copyFile('navigation.js', 'dist/navigation.js');
 await copyFile('profile.js', 'dist/profile.js');
 await copyFile('sync.js', 'dist/sync.js');
 for (const file of ['catalog.html','catalog.css','catalog.js','catalog-settings.js']) await copyFile(file, 'dist/' + file);
+await copyFile('cart.js', 'dist/cart.js');

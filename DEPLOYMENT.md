@@ -65,3 +65,7 @@ Versão 52b66c32-71c7-4a1a-8c97-768bd2cfa5ad. Listas móveis expansíveis para p
 ## Catálogo compartilhável
 
 Publicação 13b2379f-7e5b-42d5-9403-dcc4ae7591ca. Migração 004 aplicada com sucesso. Configuração por conta, publicação optativa, link independente, cópia/compartilhamento e desativação. Página pública de consulta com busca e categorias. 27 testes aprovados, incluindo isolamento entre lojas, campos públicos restritos e bloqueio após desativar. Nenhuma adega foi publicada automaticamente.
+
+## Pedidos pelo WhatsApp
+
+Versão b9d7063d-1409-4af1-ab4b-0d5053080de8. Migração 005 aplicada com sucesso. Carrinho público, quantidades/remoção, total, observações e mensagem para WhatsApp configurável por adega. 30 testes aprovados, incluindo texto do pedido, revalidação de preço/disponibilidade e normalização de contato autenticado. Nenhuma mensagem foi enviada durante os testes. A adega precisa preencher seu WhatsApp e publicar o catálogo para disponibilizar pedidos.

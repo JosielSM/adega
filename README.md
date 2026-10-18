@@ -127,3 +127,9 @@ Em até 700 px, produtos usam resumo expansível com nome, preço, saldo e statu
 Execute a migração 004_public_catalog.sql uma vez. No perfil, Catálogo para clientes permite publicar e gerar link próprio, copiar, compartilhar e desativar. Nenhum catálogo é ativado automaticamente. Nome, logo, produtos ativos com saldo positivo, marca, categoria e preço de venda ficam públicos somente após publicação. Custos, saldo numérico, histórico, e-mail e IDs de proprietário não são retornados pela função pública. Configurações têm RLS e exigem a conta autenticada. O link usa UUID independente e mantém o mesmo endereço ao reativar.
 
 A página catalog.html funciona sem login, tem busca/categorias e consulta novamente os dados a cada 30 segundos enquanto visível. Desativar bloqueia novas consultas; cópias já vistas ou salvas por clientes não podem ser recolhidas. O catálogo permite consulta, sem carrinho, pedidos ou baixa automática de estoque.
+
+## Carrinho e pedido por WhatsApp
+
+Execute a migração 005_catalog_whatsapp.sql uma vez. Em Perfil > Catálogo para clientes, salve o WhatsApp brasileiro com DDD; o número fica público quando o catálogo é publicado. Sem número configurado, compras pelo catálogo ficam indisponíveis. O cliente adiciona itens ao carrinho em memória, ajusta quantidades (1 a 99), remove, inclui observações e finaliza pelo WhatsApp. O navegador abre uma mensagem para o número da adega; o cliente confirma o envio no WhatsApp.
+
+Antes de continuar, o catálogo é consultado novamente. Produtos indisponíveis são removidos e mudanças de preço pedem nova conferência. Total é estimado; disponibilidade, entrega e pagamento são confirmados pela adega. Abrir ou enviar a mensagem não registra venda, cobra pagamento ou baixa estoque. O carrinho não é salvo após recarregar/fechar a página.
