@@ -69,3 +69,7 @@ Publicação 13b2379f-7e5b-42d5-9403-dcc4ae7591ca. Migração 004 aplicada com s
 ## Pedidos pelo WhatsApp
 
 Versão b9d7063d-1409-4af1-ab4b-0d5053080de8. Migração 005 aplicada com sucesso. Carrinho público, quantidades/remoção, total, observações e mensagem para WhatsApp configurável por adega. 30 testes aprovados, incluindo texto do pedido, revalidação de preço/disponibilidade e normalização de contato autenticado. Nenhuma mensagem foi enviada durante os testes. A adega precisa preencher seu WhatsApp e publicar o catálogo para disponibilizar pedidos.
+
+## Confirmação de e-mail temporariamente desativada
+
+Em 18/10/2026, após solicitação e confirmação explícita do proprietário, Confirm email foi desativado e salvo no Supabase. Cadastro público permanece ativo e autentica automaticamente novos usuários com e-mail e senha. A aplicação já suporta esse retorno; não houve mudança no Worker publicado. Teste específico confirmou sessão em cookie HttpOnly sem expor tokens. Requisitos de senha e isolamento entre contas permanecem. Recuperação de senha para terceiros ainda depende da configuração SMTP.

@@ -14,7 +14,7 @@ As funções SQL validam as operações e calculam estoque e custo médio dentro
 
 1. Crie um projeto chamado **Adega**.
 2. Execute `supabase/migrations/001_adega.sql` e depois `supabase/migrations/002_account_isolation.sql` no SQL Editor, uma vez cada. A migração cria tabelas, índices, RLS e funções. Use um projeto novo ou confira conflitos de nomes antes da aplicação.
-3. Em Authentication, habilite cadastro público com confirmação de e-mail e mantenha login anônimo desabilitado. Configure senha mínima de 8 caracteres, com letras maiúsculas, minúsculas, número e símbolo. Contas existentes continuam disponíveis.
+3. Em Authentication, habilite cadastro público; no estado atual, a confirmação de e-mail está desativada temporariamente por decisão do proprietário e mantenha login anônimo desabilitado. Configure senha mínima de 8 caracteres, com letras maiúsculas, minúsculas, número e símbolo. Contas existentes continuam disponíveis.
 4. Copie a URL e a chave **publishable** (ou a chave legada **anon**). Não use `service_role`, secret key ou senha do Postgres.
 
 Cada usuário tem estoque próprio, isolado por `auth.uid()`. O mesmo usuário acessa os mesmos dados em dispositivos diferentes. Contas distintas não compartilham estoque; equipes com usuários separados exigem organizações e permissões.
@@ -82,7 +82,7 @@ A área pública possui login, cadastro somente com e-mail e senha e recuperaç�
 
 - Site URL: https://adega.santosjosiel2003.workers.dev
 - Redirect URLs: /api/auth/callback e /api/auth/confirm no mesmo domínio completo.
-- Cadastro público habilitado, confirmação de e-mail mantida.
+- Cadastro público habilitado; confirmação de e-mail desativada temporariamente por autorização do proprietário.
 - Senha: mínimo 8 caracteres, maiúsculas, minúsculas, número e símbolo.
 - Login e cadastro: /#login e /#cadastro. Recuperação: /#recuperar; nova senha: /#redefinir.
 
@@ -90,7 +90,7 @@ Os fluxos de e-mail usam PKCE: o link deve ser aberto no mesmo navegador em que 
 
 ### Pendências de serviços externos
 
-O SMTP de produção ainda precisa ser configurado no Supabase. O remetente padrão de testes envia somente para membros autorizados da organização; não serve para cadastro e recuperação de outras pessoas. A aplicação não indica sucesso quando o provedor retorna erro. Não desative confirmação de e-mail para contornar essa configuração.
+O SMTP de produção ainda precisa ser configurado no Supabase. O remetente padrão de testes envia somente para membros autorizados da organização; não serve para cadastro e recuperação de outras pessoas. A aplicação não indica sucesso quando o provedor retorna erro. O proprietário autorizou desativar temporariamente a confirmação de e-mail. Recuperação de senha por e-mail ainda depende de SMTP.
 
 O código de acesso com Google usa OAuth PKCE, mas o provedor ainda depende de Client ID e Client Secret no Supabase. O projeto Google Cloud Adega foi criado com autorização específica do proprietário, e a marca OAuth foi configurada após aceite autorizado da política. O cliente Web Adega está preparado; sua criação e o armazenamento das credenciais no Supabase aguardam confirmação específica. Nenhum serviço pago foi contratado. O botão informa que a configuração está pendente enquanto o provedor estiver desabilitado.
 

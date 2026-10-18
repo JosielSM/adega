@@ -74,3 +74,10 @@ test('PKCE recovery callback grants only recovery session, not stock access',asy
   assert.doesNotMatch(response.headers.get('set-cookie'),/adega_session=/);
   assert.equal((await worker.fetch(new Request('https://adega.example/api/state',{headers:{cookie:'adega_recovery=recovery-token'}}),env)).status,401);
 });
+
+test('signup without email confirmation signs in with a protected cookie',async t=>{
+ t.mock.method(globalThis,'fetch',async()=>Response.json({access_token:'new-session',expires_in:3600,user:{id:'new-id'}}));
+ const response=await worker.fetch(post('auth/signup',{email:'new@example.com',password:'Abcdefg1!'}),env);
+ assert.equal(response.status,200);assert.deepEqual(await response.json(),{authenticated:true});
+ assert.match(response.headers.get('set-cookie'),/adega_session=new-session/);assert.match(response.headers.get('set-cookie'),/HttpOnly/);
+});
