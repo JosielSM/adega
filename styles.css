@@ -238,3 +238,21 @@ header #sync-status{font-size:10px;color:#657684;margin-top:5px}
  #bottom-navigation>[data-bottom-page=painel]{order:1}
  #bottom-navigation>[data-bottom-page=vendas]{order:2}
 }
+
+/* Atalhos com dimensões iguais; destaque somente na seleção. */
+@media(max-width:700px){
+ body:not(.auth-mode) #bottom-navigation{grid-template-columns:repeat(3,minmax(0,1fr))}
+ #bottom-navigation>a,#bottom-navigation>#bottom-new-product{width:100%;min-width:0;min-height:56px;background:transparent;color:#657684;padding:6px 3px;font-size:10px;box-shadow:none}
+ #bottom-navigation>a[aria-current=page],#bottom-navigation>#bottom-new-product[aria-pressed=true]{background:#eaf2f6;color:#186182}
+ #bottom-navigation>a:active,#bottom-navigation>#bottom-new-product:active{background:#eaf2f6;color:#186182}
+ #bottom-navigation>a:hover,#bottom-navigation>#bottom-new-product:hover{background:#f1f4f6}
+}
+dialog::backdrop{background:#12263666;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+body:has(#profile-menu:not([hidden])) main>header>div:first-child,
+body:has(#profile-menu:not([hidden])) .brand-scene,
+body:has(#profile-menu:not([hidden])) #content,
+body:has(#profile-menu:not([hidden])) main>footer,
+body.menu-open main,
+body.menu-open #bottom-navigation{filter:blur(5px)}
+body:has(#profile-menu:not([hidden])) #bottom-navigation{filter:blur(5px)}
+@media(min-width:701px){body:has(#profile-menu:not([hidden]))>aside{filter:blur(5px)}}

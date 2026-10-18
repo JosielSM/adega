@@ -28,6 +28,8 @@
       else link.removeAttribute('aria-current');
     });
   };
+  const productShortcut = document.querySelector('#bottom-new-product');
+  new MutationObserver(() => productShortcut.setAttribute('aria-pressed',String(document.querySelector('#modal').open))).observe(document.querySelector('#modal'),{attributes:true,attributeFilter:['open']});
   document.querySelector('#bottom-new-product').onclick = () => {
     if (!authenticated) return;
     close();
