@@ -8,3 +8,6 @@ await mkdir('dist/assets', { recursive: true });
 await copyFile('assets/adega-bar.png', 'dist/assets/adega-bar.png');
 
 await copyFile('assets/logo.svg', 'dist/assets/logo.svg');
+
+for (const file of ['manifest.webmanifest', 'sw.js', 'offline.html', 'pwa.js']) await copyFile(file, 'dist/' + file);
+for (const size of [192,512]) await copyFile('assets/icon-' + size + '.png', 'dist/assets/icon-' + size + '.png');

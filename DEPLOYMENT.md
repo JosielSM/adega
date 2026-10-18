@@ -45,3 +45,7 @@ Pendências: SMTP de produção para confirmação e recuperação de qualquer u
 Migração 002 aplicada em produção: integridade por proprietário entre movimentação e produto, leitura sem elevação de privilégio e permissões restritas. Teste no Postgres real com duas contas temporárias confirmou RLS, bloqueio de alteração cruzada e integridade; a transação foi revertida integralmente. Nenhum registro real foi alterado. Testes locais: 20 aprovados. Frontend publicado limpa dados ao trocar de sessão e descarta respostas da sessão anterior, inclusive entre abas.
 
 O proprietário informou que ainda não possui domínio nem serviço SMTP e deseja manter serviços gratuitos. SMTP e login Google ainda não foram validados de ponta a ponta.
+
+## PWA e responsividade
+
+Versão publicada: abd7b4bf-9020-4f3b-b1e4-78fedc32c38d. Manifesto, dois ícones PNG, instalação orientada e tela pública offline publicados. Os 20 testes anteriores e dois novos testes de privacidade do service worker passaram. Telas autenticadas verificadas em 320/768/1024 pixels; modal de produto e instalação em 390 pixels. Instalador nativo não foi confirmado em aparelho físico. API e dados de usuários não são armazenados no cache do PWA.

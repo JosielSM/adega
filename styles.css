@@ -85,3 +85,49 @@ footer { color: #7b8188; }
 @media(prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior: auto !important; transition: none !important; } .scene-image { transform: scale(1.24); will-change: auto; } }
 
 @media(max-width:700px) { nav { scrollbar-width: none; } nav::-webkit-scrollbar { display: none; } }
+/* Touch layouts, narrow phones, landscape tablets and installed app safe areas. */
+main,.grid,.stats,.card,.form-grid,.auth-panel,.auth-box{min-width:0}
+aside{overflow-y:auto}
+.stat strong,.product-name,.subtitle{overflow-wrap:anywhere}
+.table-wrap{max-width:100%;overscroll-behavior-x:contain}
+button,nav a{min-height:44px}
+input,select{min-height:44px}
+.install-app{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));z-index:15;box-shadow:0 4px 20px #12263625;font-size:12px}
+.install-app[hidden],#connection-status[hidden]{display:none}
+#connection-status{position:fixed;top:0;left:0;right:0;z-index:30;margin:0;padding:12px 16px;text-align:center;background:#785438;color:#fff;font-size:13px}
+#install-help{max-height:85svh;overflow:auto;line-height:1.7}
+#install-help h2{margin-bottom:18px}
+footer{margin-bottom:72px}
+#toast{bottom:82px;max-width:calc(100vw - 32px);overflow-wrap:anywhere;z-index:25}
+@media(max-width:1000px){
+ aside{position:static;width:100%;padding:18px 20px;border-bottom:3px solid #aa7c55}
+ .aside-label,.aside-bottom{display:none}
+ nav{display:flex;overflow-x:auto;margin-top:16px;gap:6px;scrollbar-width:thin;padding-bottom:5px}
+ nav a{white-space:nowrap;flex-shrink:0;padding:12px}
+ nav a.active{box-shadow:inset 0 -2px #c99a70}
+ main{margin-left:0;padding-inline:24px}
+ .auth-root{grid-template-columns: minmax(0,1fr) minmax(0,1fr)}
+}
+@media(max-width:700px){
+ main{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+ aside{padding-top:max(18px,env(safe-area-inset-top))}
+ input,select,#access-form>input,.password-control input{font-size:16px}
+ header{height:auto;min-height:88px;gap:10px;padding-block:14px;flex-wrap:wrap}
+ header .actions{gap:6px}
+ .form-summary{flex-wrap:wrap}
+ .toolbar>*{flex:1 1 150px;min-width:0;width:100%}
+ .form-card{padding:20px 16px}
+ dialog{padding:20px 16px;max-height:90svh;overflow:auto}
+ .modal-actions{flex-wrap:wrap}.modal-actions button{flex:1}
+ .auth-root{grid-template-columns:1fr}
+ .auth-panel{padding-bottom:90px}
+ .auth-security{flex-wrap:wrap;text-align:center}
+ .bar-label{gap:12px;overflow-wrap:anywhere}
+}
+@media(max-width:380px){
+ .stats{grid-template-columns:1fr}
+ .scene-copy h2{font-size:24px}.scene-copy{padding:24px 18px}
+ .auth-panel{padding-inline:18px}
+ .page-heading>.actions{width:100%}
+}
+@media(display-mode:standalone){.install-app{display:none}}

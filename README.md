@@ -101,3 +101,11 @@ Para configurar Google: criar projeto Adega, configurar marca e público externo
 A migração 002 exige que cada movimentação pertença à mesma conta do produto. As leituras respeitam RLS sem privilégios elevados; escritas diretas e leitura dos comandos internos são bloqueadas. O proprietário vem da sessão autenticada, nunca de campos enviados pelo navegador. Produtos, compras, vendas, relatórios e exportações usam somente os dados dessa conta. Trocar a sessão limpa os dados na interface, notifica outras abas e descarta respostas antigas em trânsito.
 
 Os 20 testes locais incluem duas contas, tentativa de falsificar o proprietário, acesso cruzado por ID e reutilização de códigos e identificadores entre contas. O roteiro supabase/tests/account-isolation.sql também foi executado no Postgres de produção com resultado positivo e rollback integral.
+
+## Aplicativo PWA e telas de toque
+
+Publicado com nome Adega, manifesto, ícones PNG 192/512, modo standalone e botão Instalar Adega. Navegadores compatíveis exibem o instalador nativo quando o disponibilizam; os demais recebem orientações. No iPhone/iPad, use Safari > Compartilhar > Adicionar à Tela de Início. A instalação final no dispositivo físico não foi executada nesta revisão.
+
+A conexão continua obrigatória para estoque e operações. O service worker armazena somente o aviso público offline; nunca intercepta API, callbacks de autenticação, gravações ou sessões. Não há fila offline de compras ou vendas.
+
+Responsividade revisada nas cinco telas de gestão em 320, 768 e 1024 pixels, sem transbordamento horizontal da página. Tabelas largas têm rolagem própria. Formulário de produto e ajuda de instalação conferidos em 390 pixels. Ajustados alvos de toque, campos de 16 px em celulares, safe areas, modais com rolagem e navegação superior em tablets.
