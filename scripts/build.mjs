@@ -11,3 +11,5 @@ await copyFile('assets/logo.svg', 'dist/assets/logo.svg');
 
 for (const file of ['manifest.webmanifest', 'sw.js', 'offline.html', 'pwa.js']) await copyFile(file, 'dist/' + file);
 for (const size of [192,512]) await copyFile('assets/icon-' + size + '.png', 'dist/assets/icon-' + size + '.png');
+await copyFile('navigation.js', 'dist/navigation.js');
+await copyFile('profile.js', 'dist/profile.js');

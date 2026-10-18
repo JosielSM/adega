@@ -109,3 +109,11 @@ Publicado com nome Adega, manifesto, ícones PNG 192/512, modo standalone e bot�
 A conexão continua obrigatória para estoque e operações. O service worker armazena somente o aviso público offline; nunca intercepta API, callbacks de autenticação, gravações ou sessões. Não há fila offline de compras ou vendas.
 
 Responsividade revisada nas cinco telas de gestão em 320, 768 e 1024 pixels, sem transbordamento horizontal da página. Tabelas largas têm rolagem própria. Formulário de produto e ajuda de instalação conferidos em 390 pixels. Ajustados alvos de toque, campos de 16 px em celulares, safe areas, modais com rolagem e navegação superior em tablets.
+
+## Perfil e identidade da empresa
+
+Execute também a migração 003_company_profile.sql uma vez. A tabela adega_profiles guarda nome e logo por proprietário com RLS; os dados são apenas de apresentação e não concedem permissões. Nenhuma imagem é incluída no token de autenticação. A API /api/profile usa somente o usuário da sessão e ignora IDs de proprietário enviados pelo cliente.
+
+O menu de perfil mostra e-mail, empresa e saída. Em Minha empresa e logo, escolha nome e imagem PNG/JPG/WebP de até 5 MB. O navegador ajusta a imagem para PNG de 192 px, com limite final de 48 KB. A identidade aparece na marca da área autenticada e é carregada novamente ao entrar em outro dispositivo. Usar logo padrão remove a personalização ao salvar. Nome e ícone da instalação PWA continuam Adega.
+
+No celular, barra superior fixa com perfil e menu de três linhas. O menu fecha ao navegar, tocar fora ou pressionar Escape. Perfil e marca personalizados são limpos ao encerrar ou trocar a sessão.

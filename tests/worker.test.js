@@ -51,3 +51,28 @@ test('oversized and malformed JSON are rejected', async () => {
 test('logout expires cookie', async () => {
   assert.match((await worker.fetch(post('logout', {}), env)).headers.get('set-cookie'), /Max-Age=0/);
 });
+
+test('profile reads and updates only authenticated profile with no owner override', async t => {
+  const calls=[];
+  t.mock.method(globalThis,'fetch',async (url,options)=>{
+    calls.push({url,options});
+    assert.equal(options.headers.Authorization,'Bearer account-a');
+    if(url.endsWith('/auth/v1/user'))return Response.json({email:'a@example.com',access_token:'never-expose'});
+    assert.match(url,/rpc\/adega_profile_(get|save)$/);
+    if(url.endsWith('save'))assert.deepEqual(JSON.parse(options.body),{p_name:'Minha loja',p_logo:''});
+    return Response.json({companyName:'Minha loja',logo:''});
+  });
+  const headers={cookie:'adega_session=account-a'};
+  const read=await worker.fetch(new Request('https://adega.example/api/profile',{headers}),env);
+  assert.deepEqual(await read.json(),{email:'a@example.com',companyName:'Minha loja',logo:''});
+  const update=await worker.fetch(post('profile',{companyName:' Minha loja ',logo:'',owner_id:'account-b',role:'admin'},headers),env);
+  assert.equal(update.status,200);assert.equal(calls.length,4);
+  assert.equal(update.headers.get('cache-control'),'no-store');
+});
+
+test('profile rejects unauthenticated, oversized and executable logo data', async()=>{
+  assert.equal((await worker.fetch(new Request('https://adega.example/api/profile'),env)).status,401);
+  for(const data of [{companyName:'Loja',logo:'data:image/svg+xml;base64,evil'}, {companyName:'x'.repeat(81),logo:''}, {companyName:'Loja',logo:'x'.repeat(66000)}]){
+    assert.equal((await worker.fetch(post('profile',data,{cookie:'adega_session=account-a'}),env)).status,400);
+  }
+});

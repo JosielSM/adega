@@ -49,3 +49,7 @@ O proprietário informou que ainda não possui domínio nem serviço SMTP e dese
 ## PWA e responsividade
 
 Versão publicada: abd7b4bf-9020-4f3b-b1e4-78fedc32c38d. Manifesto, dois ícones PNG, instalação orientada e tela pública offline publicados. Os 20 testes anteriores e dois novos testes de privacidade do service worker passaram. Telas autenticadas verificadas em 320/768/1024 pixels; modal de produto e instalação em 390 pixels. Instalador nativo não foi confirmado em aparelho físico. API e dados de usuários não são armazenados no cache do PWA.
+
+## Perfil, logo por conta e navegação móvel
+
+Publicação 8eb548c9-484a-41ce-a6a2-e1b2c07ed880. Migração 003 aplicada com sucesso. Nome e logo ficam no Postgres com RLS por usuário. Teste real confirmou envio, gravação e persistência da logo após recarregar; configuração padrão restaurada após teste. Menu móvel abre/fecha e navega; perfil mostra e-mail e configurações. Testes de API validam restrição ao usuário atual; teste Postgres verifica isolamento do perfil entre duas contas. 24 testes aprovados, além do teste de isolamento ampliado. Publicação anterior do menu móvel, bloqueada temporariamente por limite de revisão, foi concluída nesta versão.

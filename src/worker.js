@@ -10,7 +10,7 @@ function json(data, status = 200, headers = {}) {
   return Response.json(data, { status, headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', ...headers } });
 }
 
-async function body(request) {
+async function body(request, limit = LIMIT) {
   if (!request.headers.get('content-type')?.startsWith('application/json')) throw new ApiError(415, 'Envie dados em JSON.');
   const reader = request.body?.getReader();
   if (!reader) throw new ApiError(400, 'Dados obrigatórios.');
@@ -21,7 +21,7 @@ async function body(request) {
       const { done, value } = await reader.read();
       if (done) break;
       length += value.byteLength;
-      if (length > LIMIT) { await reader.cancel(); throw new ApiError(413, 'Requisição muito grande.'); }
+      if (length > limit) { await reader.cancel(); throw new ApiError(413, 'Requisição muito grande.'); }
       chunks.push(value);
     }
   } finally { reader.releaseLock(); }
@@ -98,6 +98,16 @@ export default {
       }
       const token = session(request);
       if (!token) throw new ApiError(401, 'Entre para acessar sua adega.');
+      if (url.pathname === '/api/profile') {
+        let profile;
+        if (request.method === 'POST') {
+          const data = await body(request, 96 * 1024);
+          if (typeof data.companyName !== 'string' || data.companyName.trim().length > 80 || typeof data.logo !== 'string' || data.logo.length > 65536 || (data.logo && !/^data:image\/png;base64,iVBORw0KGgo[A-Za-z0-9+/]*={0,2}$/.test(data.logo))) throw new ApiError(400, 'Informe um nome de até 80 caracteres e uma logo PNG válida de até 48 KB.');
+          profile = await supabase(env, '/rest/v1/rpc/adega_profile_save', token, {p_name:data.companyName.trim(),p_logo:data.logo});
+        } else profile = await supabase(env, '/rest/v1/rpc/adega_profile_get', token, {});
+        const user = await supabase(env, '/auth/v1/user', token, undefined, 'GET');
+        return json({email:user.email || '',companyName:profile.companyName,logo:profile.logo});
+      }
       if (url.pathname === '/api/state' && request.method === 'GET') {
         return json(await supabase(env, '/rest/v1/rpc/adega_state', token, {}));
       }
