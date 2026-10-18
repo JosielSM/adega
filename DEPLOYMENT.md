@@ -20,6 +20,10 @@ O projeto anterior da conta contém migrações de outro sistema e não foi alte
 
 Um teste SQL executado no Postgres real verificou cadastro de produto, compra, venda, custo médio, idempotência, bloqueio de estoque negativo, preservação do custo histórico e isolamento entre contas. O teste foi executado dentro de uma transação revertida ao final: não deixou produtos, movimentações nem comandos no banco.
 
-A interface publicada carrega a tela de entrada e a API solicita autenticação. A validação completa pela interface aguarda o proprietário entrar com a senha que definiu. A senha não foi solicitada nem registrada no chat ou no repositório.
+A validação completa pela interface foi concluída com o proprietário autenticado. Foram verificados cadastro de produto com estoque inicial, compra, bloqueio de venda acima do saldo, venda válida, relatórios e persistência após recarregar a página. O teste resultou em saldo de 5 unidades, custo médio de R$ 15,00, receita de R$ 450,00, lucro bruto de R$ 225,00 e estoque avaliado em R$ 75,00, conforme esperado.
+
+Com confirmação explícita do proprietário, foram removidos somente o produto fictício de código `ADEGA-E2E-20261018`, suas três movimentações e seus três comandos técnicos. A limpeza usou filtros por proprietário, código, nome e marca e conferência de contagens dentro de transação. A interface foi atualizada e confirmou estoque, receita, lucro e movimentações zerados. O sistema está pronto para o cadastro dos produtos reais.
+
+A senha não foi solicitada nem registrada no chat ou no repositório. O usuário fez a autenticação diretamente na interface.
 
 Não registrar senhas, tokens administrativos ou chaves privadas neste arquivo.
