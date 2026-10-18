@@ -14,7 +14,7 @@ As funções SQL validam as operações e calculam estoque e custo médio dentro
 
 1. Crie um projeto chamado **Adega**.
 2. Execute `supabase/migrations/001_adega.sql` no SQL Editor uma vez. A migração cria tabelas, índices, RLS e funções. Use um projeto novo ou confira conflitos de nomes antes da aplicação.
-3. Em Authentication, desative cadastro público e crie o usuário de operação com e-mail confirmado e senha. Esta versão possui login; cadastro e redefinição de senha são administrados no Supabase.
+3. Em Authentication, habilite cadastro público com confirmação de e-mail e mantenha login anônimo desabilitado. Configure senha mínima de 8 caracteres, com letras maiúsculas, minúsculas, número e símbolo. Contas existentes continuam disponíveis.
 4. Copie a URL e a chave **publishable** (ou a chave legada **anon**). Não use `service_role`, secret key ou senha do Postgres.
 
 Cada usuário tem estoque próprio, isolado por `auth.uid()`. O mesmo usuário acessa os mesmos dados em dispositivos diferentes. Contas distintas não compartilham estoque; equipes com usuários separados exigem organizações e permissões.
@@ -43,7 +43,7 @@ npx wrangler secret put SUPABASE_PUBLISHABLE_KEY
 npm run deploy
 ```
 
-Informe os valores nos prompts. O build copia somente os arquivos públicos index.html, styles.css, app.js, visual.js e a fotografia assets/adega-bar.png para dist. SQL, fontes do servidor e credenciais não são assets públicos. A publicação usa o Worker `adega`, configurado em wrangler.jsonc.
+Informe os valores nos prompts. O build copia somente os arquivos públicos index.html, styles.css, auth.css, app.js, auth.js, visual.js e os arquivos assets/adega-bar.png e assets/logo.svg para dist. SQL, fontes do servidor e credenciais não são assets públicos. A publicação usa o Worker `adega`, configurado em wrangler.jsonc.
 
 ## Verificar
 
@@ -73,3 +73,25 @@ O download JSON exporta os registros da conta para consulta. A restauração loc
 ## Identidade visual
 
 Paleta azul petróleo, marrom e fundo claro, com fotografia própria gerada para a Adega. A faixa usa parallax suave na rolagem, desativado quando o dispositivo pede movimento reduzido. A imagem é servida pelo próprio Worker.
+
+## Cadastro, recuperação e Google
+
+A área pública possui login, cadastro somente com e-mail e senha e recuperação. O painel e os menus ficam ocultos por padrão, até a confirmação da sessão. A interface mostra carregamento, erros, lista de requisitos de senha e botão para mostrar/ocultar a senha. A API valida novamente a senha; validação visual não substitui a validação no servidor. Cada conta tem estoque próprio.
+
+### Supabase Auth
+
+- Site URL: https://adega.santosjosiel2003.workers.dev
+- Redirect URLs: /api/auth/callback e /api/auth/confirm no mesmo domínio completo.
+- Cadastro público habilitado, confirmação de e-mail mantida.
+- Senha: mínimo 8 caracteres, maiúsculas, minúsculas, número e símbolo.
+- Login e cadastro: /#login e /#cadastro. Recuperação: /#recuperar; nova senha: /#redefinir.
+
+Os fluxos de e-mail usam PKCE: o link deve ser aberto no mesmo navegador em que a solicitação foi iniciada. A prova fica em cookie HttpOnly. O retorno de recuperação cria uma sessão temporária separada, sem acesso ao estoque, e permite salvar a nova senha. O endpoint /api/auth/confirm também aceita token_hash para futuros templates personalizados.
+
+### Pendências de serviços externos
+
+O SMTP de produção ainda precisa ser configurado no Supabase. O remetente padrão de testes envia somente para membros autorizados da organização; não serve para cadastro e recuperação de outras pessoas. A aplicação não indica sucesso quando o provedor retorna erro. Não desative confirmação de e-mail para contornar essa configuração.
+
+O código de acesso com Google usa OAuth PKCE, mas o provedor ainda depende de Client ID e Client Secret no Supabase. A criação de um projeto Google Cloud chamado Adega aguarda a autorização específica do proprietário, após bloqueio da revisão automática. Não foi criado projeto nem contratado serviço pago. O botão informa que a configuração está pendente enquanto o provedor estiver desabilitado.
+
+Para configurar Google: criar projeto Adega, configurar marca e público externo, criar cliente OAuth do tipo Web com origem https://adega.santosjosiel2003.workers.dev e callback https://gcyktgzpsbteugztugtq.supabase.co/auth/v1/callback. Guardar Client ID/Secret diretamente no provedor Google do Supabase, sem versionar. Habilitar apenas escopos openid, email e profile. Validar o login real depois da configuração.

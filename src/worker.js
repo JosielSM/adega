@@ -1,3 +1,4 @@
+import { authRoute } from './auth.js';
 const COOKIE = 'adega_session';
 const LIMIT = 32 * 1024;
 
@@ -42,17 +43,23 @@ function cookie(request, token, age) {
   return `${COOKIE}=${token}; Path=/api; HttpOnly; SameSite=Strict; Max-Age=${age}${new URL(request.url).protocol === 'https:' ? '; Secure' : ''}`;
 }
 
-async function supabase(env, path, token, data) {
+async function supabase(env, path, token, data, method = 'POST') {
   const response = await fetch(`${env.SUPABASE_URL.replace(/\/$/, '')}${path}`, {
-    method: 'POST',
+    method,
     headers: { apikey: env.SUPABASE_PUBLISHABLE_KEY, ...(token ? { Authorization: `Bearer ${token}` } : {}), 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
+    body: method==='GET'?undefined:JSON.stringify(data),
     signal: AbortSignal.timeout(15000)
   });
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
+    if (path.startsWith('/auth/')) {
+      if(response.status===429)throw new ApiError(429,'Muitas tentativas. Aguarde alguns minutos e tente novamente.');
+      const messages={signup_disabled:'Novos cadastros estão temporariamente indisponíveis.',email_not_confirmed:'Confirme seu e-mail antes de entrar. Confira sua caixa de entrada.',weak_password:'Sua senha não atende aos requisitos de segurança.',same_password:'Escolha uma senha diferente da senha atual.',otp_expired:'Link inválido ou expirado. Solicite um novo link.',over_email_send_rate_limit:'Aguarde alguns minutos antes de solicitar outro e-mail.',email_address_not_authorized:'O envio de e-mails para novos usuários ainda está sendo configurado.',email_address_invalid:'Informe um e-mail válido.',user_already_exists:'Se você já possui uma conta, entre ou recupere sua senha.'};
+      if(messages[error.code])throw new ApiError(400,messages[error.code]);
+      if(path.includes('/token?grant_type=password'))throw new ApiError(401,'E-mail ou senha inválidos. Confira seus dados e tente novamente.');
+      throw new ApiError(400,'Não foi possível concluir a solicitação. Tente novamente ou solicite um novo link.');
+    }
     if (response.status === 401 || error.code === 'PGRST301' || error.code === 'PGRST303') throw new ApiError(401, 'Sessão expirada. Entre novamente.');
-    if (path.startsWith('/auth/')) throw new ApiError(401, 'E-mail ou senha inválidos.');
     const messages = { P0001: error.message, '23505': 'Este código já foi cadastrado.', '23514': 'Valores inválidos. Confira os campos.', '22P02': 'Dados inválidos.', '22003': 'Valor acima do limite permitido.' };
     if (messages[error.code]) throw new ApiError(400, messages[error.code]);
     console.error(JSON.stringify({ event: 'database_error', status: response.status, code: error.code }));
@@ -68,8 +75,21 @@ export default {
     try {
       if (!['GET', 'POST'].includes(request.method)) throw new ApiError(405, 'Método não permitido.');
       if (request.method === 'POST' && request.headers.get('origin') !== url.origin) throw new ApiError(403, 'Origem não permitida.');
-      if (url.pathname === '/api/logout' && request.method === 'POST') return json({ ok: true }, 200, { 'Set-Cookie': cookie(request, '', 0) });
+      if (url.pathname === '/api/logout' && request.method === 'POST') {
+        const token=session(request);
+        if(token&&env.SUPABASE_URL&&env.SUPABASE_PUBLISHABLE_KEY){
+          try{await supabase(env,'/auth/v1/logout?scope=local',token,{});}catch{ /* Always allow clearing this browser's cookies. */ }
+        }
+        const headers=new Headers({'Cache-Control':'no-store','Content-Type':'application/json'});
+        for(const name of ['adega_session','adega_recovery','adega_pkce','adega_pkce_kind'])headers.append('Set-Cookie',cookie(request,'',0).replace('adega_session=',name+'='));
+        return new Response(JSON.stringify({ok:true}),{status:200,headers});
+      }
       if (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY) throw new ApiError(503, 'Configure a conexão com o Supabase no Worker.');
+      if(url.pathname.startsWith('/api/auth/')){
+        const response=await authRoute(request,env,{supabase,body,json,cookie,session,ApiError});
+        if(response)return response;
+        throw new ApiError(404,'Rota não encontrada.');
+      }
       if (url.pathname === '/api/login' && request.method === 'POST') {
         const data = await body(request);
         if (typeof data.email !== 'string' || typeof data.password !== 'string' || !data.email.trim() || !data.password || data.email.length > 254 || data.password.length > 1024) throw new ApiError(400, 'Informe e-mail e senha.');
