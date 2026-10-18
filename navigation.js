@@ -20,6 +20,27 @@
     if (event.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {close(); toggle.focus();}
   });
   window.addEventListener('hashchange', close);
+  const bottom = document.querySelector('#bottom-navigation');
+  const updateBottom = () => {
+    const page = location.hash.slice(1) || 'painel';
+    bottom.querySelectorAll('[data-bottom-page]').forEach(link => {
+      if (link.dataset.bottomPage === page) link.setAttribute('aria-current','page');
+      else link.removeAttribute('aria-current');
+    });
+  };
+  document.querySelector('#bottom-new-product').onclick = () => {
+    if (!authenticated) return;
+    close();
+    if (location.hash === '#produtos') productModal();
+    else {
+      window.addEventListener('hashchange', () => {
+        if (authenticated && location.hash === '#produtos') productModal();
+      }, {once:true});
+      location.hash = 'produtos';
+    }
+  };
+  window.addEventListener('hashchange', updateBottom);
+  updateBottom();
   matchMedia('(max-width:700px)').addEventListener('change', close);
   new MutationObserver(() => { if (document.body.classList.contains('auth-mode') && document.body.classList.contains('menu-open')) close(); })
     .observe(document.body, {attributes:true, attributeFilter:['class']});
