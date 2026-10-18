@@ -6,7 +6,7 @@
   let frame = 0;
   function update() {
     frame = 0;
-    if (motion.matches) {
+    if (scene.hidden || motion.matches) {
       scene.style.removeProperty('--parallax-shift');
       return;
     }
@@ -20,6 +20,7 @@
   }
   window.addEventListener('scroll', schedule, { passive: true });
   window.addEventListener('resize', schedule, { passive: true });
+  window.addEventListener('hashchange', schedule);
   motion.addEventListener('change', schedule);
   schedule();
 })();

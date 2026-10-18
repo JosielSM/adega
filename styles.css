@@ -172,3 +172,6 @@ footer{margin-bottom:72px}
  aside .brand{max-width:calc(100% - 112px);font-size:23px;gap:8px}
  aside .brand .dot{display:none}
 }
+
+.brand-scene[hidden]{display:none}
+main:has(.brand-scene[hidden]) section{min-height:calc(100svh - 158px)}
