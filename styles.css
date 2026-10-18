@@ -175,3 +175,5 @@ footer{margin-bottom:72px}
 
 .brand-scene[hidden]{display:none}
 main:has(.brand-scene[hidden]) section{min-height:calc(100svh - 158px)}
+
+header #sync-status{font-size:10px;color:#657684;margin-top:5px}

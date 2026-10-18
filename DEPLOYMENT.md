@@ -53,3 +53,7 @@ Versão publicada: abd7b4bf-9020-4f3b-b1e4-78fedc32c38d. Manifesto, dois ícones
 ## Perfil, logo por conta e navegação móvel
 
 Publicação 8eb548c9-484a-41ce-a6a2-e1b2c07ed880. Migração 003 aplicada com sucesso. Nome e logo ficam no Postgres com RLS por usuário. Teste real confirmou envio, gravação e persistência da logo após recarregar; configuração padrão restaurada após teste. Menu móvel abre/fecha e navega; perfil mostra e-mail e configurações. Testes de API validam restrição ao usuário atual; teste Postgres verifica isolamento do perfil entre duas contas. 24 testes aprovados, além do teste de isolamento ampliado. Publicação anterior do menu móvel, bloqueada temporariamente por limite de revisão, foi concluída nesta versão.
+
+## Atualização automática
+
+Versão 8f0b360f-789f-4790-b9b7-cde059b86671. Removidos Atualizar e Sair da barra; saída permanece no perfil. Consulta automática a cada 15 segundos em aba visível, ao focar, navegar e reconectar. Requisições não se sobrepõem e respostas iniciadas antes de uma gravação são descartadas. Formulários em preenchimento são preservados, filtros são reaplicados. Os 24 testes existentes e o novo teste de sincronização passaram.

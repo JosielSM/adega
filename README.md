@@ -56,7 +56,7 @@ npm run types
 
 Os testes da API usam respostas simuladas. O teste de banco executa a migração real no Postgres embarcado PGlite, simulando o schema de autenticação do Supabase, e verifica custo médio, saldo, duplicação, rollback e isolamento entre contas. O teste da interface verifica chamadas à API e repetição segura após falha de conexão. Antes de operar em produção, aplique a migração e valide login, cadastro, compra e venda no projeto Supabase real, incluindo vendas simultâneas e acesso com duas contas.
 
-A sessão exige novo login quando expira, no máximo após uma hora; não há renovação automática. O botão Atualizar busca o estado atual do servidor. Não há atualização em tempo real.
+A sessão exige novo login quando expira, no máximo após uma hora; não há renovação automática. O estado é consultado automaticamente a cada 15 segundos com a aba visível e também ao voltar ao aplicativo, navegar ou reconectar. Não há assinatura Realtime. O preenchimento de formulários é preservado e operações são validadas no banco.
 
 ## Dados e relatórios
 

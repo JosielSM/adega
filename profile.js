@@ -31,7 +31,7 @@
     preview.src = draftLogo || 'assets/logo.svg'; feedback.textContent = ''; form.elements.logo.value = ''; dialog.showModal();
   };
   document.querySelector('#close-company-settings').onclick = () => dialog.close();
-  document.querySelector('#profile-signout').onclick = () => {closeMenu(); document.querySelector('#logout').click();};
+  document.querySelector('#profile-signout').addEventListener('click', closeMenu);
   form.elements.logo.onchange = async () => {
     const file = form.elements.logo.files[0]; if (!file) return;
     feedback.textContent = ''; reading = true; form.querySelector('[type=submit]').disabled = true;
