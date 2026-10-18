@@ -177,3 +177,43 @@ footer{margin-bottom:72px}
 main:has(.brand-scene[hidden]) section{min-height:calc(100svh - 158px)}
 
 header #sync-status{font-size:10px;color:#657684;margin-top:5px}
+
+/* Resumos com detalhes progressivos para telas de toque. */
+.mobile-records{display:none}
+@media(max-width:700px){
+ .desktop-records{display:none}
+ .mobile-records{display:block}
+ .record{border-top:1px solid #e8ecee}
+ .record summary{list-style:none;display:flex;align-items:center;gap:10px;min-height:72px;padding:14px 16px;cursor:pointer}
+ .record summary::-webkit-details-marker,.more-records>summary::-webkit-details-marker{display:none}
+ .record summary:focus-visible,.more-records>summary:focus-visible{outline:2px solid #186182;outline-offset:-3px}
+ .record-main{min-width:0;flex:1;display:grid;gap:5px}
+ .record-main strong{font-size:14px;overflow-wrap:anywhere}
+ .record-main>span{font-size:12px;color:#657684}
+ .record-total{font-size:13px;white-space:nowrap}
+ .record-chevron{font-size:21px;color:#657684;transition:transform .2s}
+ .record[open]>summary .record-chevron{transform:rotate(180deg)}
+ .record[open]>summary{background:#f0f5f7}
+ .record-body{padding:4px 16px 16px;background:#fafbfc}
+ .record-body dl{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin:16px 0}
+ .record-body dl>div{min-width:0}
+ .record-body dt{font-size:11px;color:#657684;margin-bottom:5px}
+ .record-body dd{margin:0;font-size:13px;overflow-wrap:anywhere}
+ .record-body .actions>button{flex:1;padding:12px 10px;font-size:12px}
+ .record-hint{font-size:11px;line-height:1.6;color:#657684;margin:14px 0 0}
+ .more-records>summary{list-style:none;cursor:pointer;min-height:48px;padding:15px 16px;text-align:center;color:#186182;font-weight:600;font-size:13px;border-top:1px solid #e8ecee}
+ .more-records[open]>summary{background:#eaf0f4}
+ .more-records>summary::after{content:' ＋'}
+ .more-records[open]>summary::after{content:' −'}
+ .brand-scene{height:145px;margin-top:12px}
+ .scene-copy{padding:20px}.scene-copy h2{font-size:22px;margin:12px 0 0}.scene-copy p{display:none}
+ header{min-height:68px;padding-block:10px}.eyebrow{font-size:8px}header p{font-size:11px}
+ section{padding-top:20px}.page-heading{margin-bottom:18px;gap:12px}.page-heading h1{font-size:22px;margin-bottom:5px}
+ p.subtitle{font-size:12px}.stats{gap:8px;margin-bottom:16px;grid-template-columns:repeat(2,minmax(0,1fr))}
+ .stat{padding:14px}.stat-label{font-size:11px}.stat strong{font-size:22px;margin:10px 0 4px}.stat small{font-size:9px}
+ .card{margin-bottom:14px}.card-head{padding:16px;gap:8px}.card-head h2{font-size:15px}.card-head p{font-size:11px}
+ .text-link{min-height:44px;display:flex;align-items:center}
+ .toolbar{padding:0 16px 16px;gap:8px}.notice{font-size:11px;padding:12px;margin-bottom:16px}
+ .empty{padding:24px 16px;font-size:12px}
+ .grid{gap:0}
+}

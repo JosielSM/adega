@@ -57,3 +57,7 @@ Publicação 8eb548c9-484a-41ce-a6a2-e1b2c07ed880. Migração 003 aplicada com s
 ## Atualização automática
 
 Versão 8f0b360f-789f-4790-b9b7-cde059b86671. Removidos Atualizar e Sair da barra; saída permanece no perfil. Consulta automática a cada 15 segundos em aba visível, ao focar, navegar e reconectar. Requisições não se sobrepõem e respostas iniciadas antes de uma gravação são descartadas. Formulários em preenchimento são preservados, filtros são reaplicados. Os 24 testes existentes e o novo teste de sincronização passaram.
+
+## Resumos móveis
+
+Versão 52b66c32-71c7-4a1a-8c97-768bd2cfa5ad. Listas móveis expansíveis para produtos e movimentações, Ver mais e cartões menores. Revisão autenticada em 390 px: detalhes, ação Editar, cancelamento e detalhes de movimentação conferidos; página sem transbordamento horizontal. 25 testes aprovados e teste de sincronização repetido após ajuste para preservar detalhes abertos.

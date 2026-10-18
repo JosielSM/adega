@@ -117,3 +117,7 @@ Execute também a migração 003_company_profile.sql uma vez. A tabela adega_pro
 O menu de perfil mostra e-mail, empresa e saída. Em Minha empresa e logo, escolha nome e imagem PNG/JPG/WebP de até 5 MB. O navegador ajusta a imagem para PNG de 192 px, com limite final de 48 KB. A identidade aparece na marca da área autenticada e é carregada novamente ao entrar em outro dispositivo. Usar logo padrão remove a personalização ao salvar. Nome e ícone da instalação PWA continuam Adega.
 
 No celular, barra superior fixa com perfil e menu de três linhas. O menu fecha ao navegar, tocar fora ou pressionar Escape. Perfil e marca personalizados são limpos ao encerrar ou trocar a sessão.
+
+## Listas compactas no celular
+
+Em até 700 px, produtos usam resumo expansível com nome, preço, saldo e status; detalhes exibem categoria, marca, código, custo e ações. Primeiros oito produtos visíveis; Ver mais revela os demais sem perder os filtros. Movimentações mostram três resumos iniciais, detalhes de data/valor/cliente/pagamento e expansão para as restantes. Desktop mantém tabelas. Banner e cartões reduzidos no celular. Atualizações automáticas não substituem detalhes abertos; alterações pendentes aparecem ao terminar a interação. Expansão nativa funciona por toque ou teclado, com foco visível e ações identificadas.
