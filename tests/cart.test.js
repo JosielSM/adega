@@ -12,3 +12,9 @@ test('cart rechecks availability and price before checkout',()=>{
  assert.equal(cart.has('b'),false);assert.equal(cart.get('a').price,12);assert.equal(cart.get('a').quantity,2);
  assert.equal(reconcileCart(cart,[{id:'a',name:'A',price:12}]),false);
 });
+
+test('delivery address is included in WhatsApp draft with line breaks',()=>{
+ const text=orderMessage([{name:'Skol',price:15,quantity:2}],' Rua A, 123\nCentro, Manaus - AM\nCasa 2 ');
+ assert.match(text,/Total a pagar:.*30,00/);
+ assert.match(text,/\*Endereço de entrega\*\nRua A, 123\nCentro, Manaus - AM\nCasa 2$/);
+});
