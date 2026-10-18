@@ -15,8 +15,10 @@ test('Postgres migration: stock, cost, idempotency, rollback and account isolati
       create table auth.users(id uuid primary key);
       create function auth.uid() returns uuid language sql stable as
         $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
+      grant usage on schema auth to authenticated, anon;
     `);
     await db.exec(await readFile(new URL('../supabase/migrations/001_adega.sql', import.meta.url), 'utf8'));
+    await db.exec(await readFile(new URL('../supabase/migrations/002_account_isolation.sql', import.meta.url), 'utf8'));
     const userA = randomUUID(), userB = randomUUID();
     await db.query('insert into auth.users values ($1),($2)', [userA, userB]);
     await db.query("select set_config('request.jwt.claim.sub', $1, false)", [userA]);

@@ -12,6 +12,8 @@ test('interface sends commands and reuses request ID after connection failure', 
   };
   const calls = [];
   let fail = false;
+  let hold = false;
+  let finish;
   const context = vm.createContext({
     Intl, Date, JSON, Number, String, Array, Object, Set, Math, Error, crypto: webcrypto,
     document: { body: { classList: { add() {}, remove() {} } }, querySelector: el, querySelectorAll: () => [] }, location: { hash: '' },
@@ -20,6 +22,7 @@ test('interface sends commands and reuses request ID after connection failure', 
       if (url === '/api/command') {
         calls.push(JSON.parse(options.body));
         if (fail) throw Error('Connexion interrompue');
+        if (hold) return new Promise(resolve=>{finish=resolve;});
       }
       return Response.json({ products: [], movements: [] });
     }
@@ -33,4 +36,10 @@ test('interface sends commands and reuses request ID after connection failure', 
   assert.equal(await vm.runInContext("saveCommand('movement',{id:'product',type:'sale',quantity:1,price:10},source)", context), true);
   assert.equal(calls[0].requestId, calls[1].requestId);
   assert.equal(calls[1].payload.quantity, 1);
+  hold=true;
+  const stale=vm.runInContext("saveCommand('movement',{id:'previous-account-product',type:'sale',quantity:1,price:10},source)",context);
+  vm.runInContext('sessionGeneration++',context);
+  finish(Response.json({products:[{id:'previous-account-product'}],movements:[]}));
+  assert.equal(await stale,false);
+  assert.equal(vm.runInContext('db.products.length',context),0,'response from prior account must never replace current data');
 });

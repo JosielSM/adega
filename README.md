@@ -13,7 +13,7 @@ As funções SQL validam as operações e calculam estoque e custo médio dentro
 ## Preparar o Supabase
 
 1. Crie um projeto chamado **Adega**.
-2. Execute `supabase/migrations/001_adega.sql` no SQL Editor uma vez. A migração cria tabelas, índices, RLS e funções. Use um projeto novo ou confira conflitos de nomes antes da aplicação.
+2. Execute `supabase/migrations/001_adega.sql` e depois `supabase/migrations/002_account_isolation.sql` no SQL Editor, uma vez cada. A migração cria tabelas, índices, RLS e funções. Use um projeto novo ou confira conflitos de nomes antes da aplicação.
 3. Em Authentication, habilite cadastro público com confirmação de e-mail e mantenha login anônimo desabilitado. Configure senha mínima de 8 caracteres, com letras maiúsculas, minúsculas, número e símbolo. Contas existentes continuam disponíveis.
 4. Copie a URL e a chave **publishable** (ou a chave legada **anon**). Não use `service_role`, secret key ou senha do Postgres.
 
@@ -92,6 +92,12 @@ Os fluxos de e-mail usam PKCE: o link deve ser aberto no mesmo navegador em que 
 
 O SMTP de produção ainda precisa ser configurado no Supabase. O remetente padrão de testes envia somente para membros autorizados da organização; não serve para cadastro e recuperação de outras pessoas. A aplicação não indica sucesso quando o provedor retorna erro. Não desative confirmação de e-mail para contornar essa configuração.
 
-O código de acesso com Google usa OAuth PKCE, mas o provedor ainda depende de Client ID e Client Secret no Supabase. A criação de um projeto Google Cloud chamado Adega aguarda a autorização específica do proprietário, após bloqueio da revisão automática. Não foi criado projeto nem contratado serviço pago. O botão informa que a configuração está pendente enquanto o provedor estiver desabilitado.
+O código de acesso com Google usa OAuth PKCE, mas o provedor ainda depende de Client ID e Client Secret no Supabase. O projeto Google Cloud Adega foi criado com autorização específica do proprietário, e a marca OAuth foi configurada após aceite autorizado da política. O cliente Web Adega está preparado; sua criação e o armazenamento das credenciais no Supabase aguardam confirmação específica. Nenhum serviço pago foi contratado. O botão informa que a configuração está pendente enquanto o provedor estiver desabilitado.
 
 Para configurar Google: criar projeto Adega, configurar marca e público externo, criar cliente OAuth do tipo Web com origem https://adega.santosjosiel2003.workers.dev e callback https://gcyktgzpsbteugztugtq.supabase.co/auth/v1/callback. Guardar Client ID/Secret diretamente no provedor Google do Supabase, sem versionar. Habilitar apenas escopos openid, email e profile. Validar o login real depois da configuração.
+
+## Isolamento reforçado entre contas
+
+A migração 002 exige que cada movimentação pertença à mesma conta do produto. As leituras respeitam RLS sem privilégios elevados; escritas diretas e leitura dos comandos internos são bloqueadas. O proprietário vem da sessão autenticada, nunca de campos enviados pelo navegador. Produtos, compras, vendas, relatórios e exportações usam somente os dados dessa conta. Trocar a sessão limpa os dados na interface, notifica outras abas e descarta respostas antigas em trânsito.
+
+Os 20 testes locais incluem duas contas, tentativa de falsificar o proprietário, acesso cruzado por ID e reutilização de códigos e identificadores entre contas. O roteiro supabase/tests/account-isolation.sql também foi executado no Postgres de produção com resultado positivo e rollback integral.

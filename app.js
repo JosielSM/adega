@@ -5,11 +5,17 @@ const date=s=>new Date(s).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'s
 let db={products:[],movements:[]};
 let authenticated=false;
 let busy=false;
+let sessionGeneration=0;
+const accountChannel=typeof BroadcastChannel==='function'?new BroadcastChannel('adega-access'):null;
+function invalidateAccount(message='Sua sessão mudou em outra aba. Entre novamente.'){sessionGeneration++;authenticated=false;db={products:[],movements:[]};document.querySelector('#modal').close();login(message);}
+if(accountChannel)accountChannel.onmessage=()=>invalidateAccount();
 async function api(path, data) {
+  const generation=sessionGeneration;
   const response=await fetch('/api/'+path,{method:data?'POST':'GET',headers:data?{'Content-Type':'application/json'}:{},credentials:'same-origin',body:data?JSON.stringify(data):undefined});
   const result=await response.json();
+  if(generation!==sessionGeneration)throw Error('Sessão alterada. Atualize a página e entre novamente.');
   if(!response.ok){
-    if(response.status===401&&authenticated){authenticated=false;db={products:[],movements:[]};document.querySelector('#modal').close();login();}
+    if(response.status===401&&authenticated){invalidateAccount('Sessão expirada. Entre novamente.');accountChannel?.postMessage('session-changed');}
     throw Error(result.error||'Não foi possível concluir a operação.');
   }
   return result;
@@ -60,6 +66,6 @@ function download(name,data,type){const url=URL.createObjectURL(new Blob([data],
 function reports(){const sales=db.movements.filter(m=>m.type==='sale');const ranking=db.products.map(p=>({name:p.name,total:sales.filter(m=>m.productId===p.id).reduce((a,m)=>a+m.quantity,0)})).filter(p=>p.total).sort((a,b)=>b.total-a.total).slice(0,5);const days=Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-6+i);const key=d.toLocaleDateString('pt-BR');return {label:d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}),value:sales.filter(m=>new Date(m.date).toLocaleDateString('pt-BR')===key).reduce((a,m)=>a+m.price*m.quantity,0)}});const max=Math.max(1,...days.map(d=>d.value));content.innerHTML=heading('Relatórios','Entenda os resultados e planeje os próximos passos.')+stats()+`<div class="grid"><div class="card"><div class="card-head"><div><h2>Vendas nos últimos 7 dias</h2><p>Receita diária em reais</p></div></div><div class="chart"><div class="chart-columns">${days.map(d=>`<div class="chart-column" style="height:${Math.max(1,d.value/max*100)}%" title="${d.label}: ${money(d.value)}"><span>${d.label}</span></div>`).join('')}</div></div></div><div class="card"><div class="card-head"><h2>Bebidas mais vendidas</h2></div>${ranking.length?ranking.map(p=>`<div class="bar-row"><div class="bar-label"><span>${esc(p.name)}</span><b>${p.total} un.</b></div><div class="bar"><span style="width:${p.total/ranking[0].total*100}%"></span></div></div>`).join(''):empty('Registre vendas para visualizar os destaques.')}</div></div><div class="card"><div class="card-head"><div><h2>Backup dos dados</h2><p>Exporte uma cópia dos registros. A restauração do banco é feita pelo administrador no Supabase.</p></div><div class="actions"><button class="secondary" id="backup">Baixar backup ↓</button></div></div></div><div class="notice">Os indicadores consideram todo o histórico. Lucro bruto não inclui despesas operacionais, taxas ou impostos.</div>`;document.querySelector('#backup').onclick=()=>download('Adega-backup-'+new Date().toISOString().slice(0,10)+'.json',JSON.stringify(db,null,2),'application/json')}
 document.querySelector('#close-modal').onclick=document.querySelector('#cancel-modal').onclick=()=>document.querySelector('#modal').close();
 function render(){if(!authenticated){login();return}document.body.classList.remove('auth-mode');document.querySelector('#auth-root').hidden=true;document.querySelector('#logout').hidden=false;const page=location.hash.slice(1)||'painel';document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('active',a.hash==='#'+page));({painel:panel,produtos:products,vendas:()=>transaction('sale'),compras:()=>transaction('purchase'),historico:movementHistory,relatorios:reports}[page]||panel)()}
-document.querySelector('#logout').onclick=async()=>{if(busy)return;const button=document.querySelector('#logout');button.disabled=true;button.textContent='Saindo…';try{await api('logout',{});authenticated=false;db={products:[],movements:[]};document.querySelector('#modal').close();location.hash='login';login();toast('Você saiu da sua conta.');}catch(error){toast(error.message)}finally{button.disabled=false;button.textContent='Sair'}};
+document.querySelector('#logout').onclick=async()=>{if(busy)return;const button=document.querySelector('#logout');button.disabled=true;button.textContent='Saindo…';sessionGeneration++;try{await api('logout',{});accountChannel?.postMessage('session-changed');authenticated=false;db={products:[],movements:[]};document.querySelector('#modal').close();location.hash='login';login();toast('Você saiu da sua conta.');}catch(error){toast(error.message)}finally{button.disabled=false;button.textContent='Sair'}};
 document.querySelector('#refresh').onclick=async()=>{if(busy||!authenticated)return;try{db=await api('state');render();toast('Dados atualizados.')}catch(error){toast(error.message)}};
 window.addEventListener('hashchange',render);start();

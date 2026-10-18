@@ -63,7 +63,7 @@
         const endpoint={login:'login',cadastro:'auth/signup',recuperar:'auth/recover',redefinir:'auth/password'}[view];
         const result=await api(endpoint,data);
         if (view==='login'||result.authenticated) {
-          db=await api('state');authenticated=true;location.hash='painel';render();toast(view==='redefinir'?'Senha atualizada. Bem-vindo à Adega!':'Acesso confirmado. Bem-vindo à Adega!');
+          sessionGeneration++;accountChannel?.postMessage('session-changed');db={products:[],movements:[]};db=await api('state');authenticated=true;location.hash='painel';render();toast(view==='redefinir'?'Senha atualizada. Bem-vindo à Adega!':'Acesso confirmado. Bem-vindo à Adega!');
         } else {feedback(result.message,true);e.target.reset(); if(password)password.dispatchEvent(new Event('input'));}
       } catch(error){feedback(error.message);} finally {setPending(false);}
     };

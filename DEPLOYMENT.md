@@ -4,7 +4,7 @@ Atualizado em 18/10/2026.
 
 - Worker Cloudflare: `adega`.
 - Endereço: https://adega.santosjosiel2003.workers.dev
-- Versão publicada: `4c9b2451-e83e-45c5-a217-0e48dfcb1dda`.
+- Versão publicada: `2a504e55-ddd8-408a-959d-4bbd5bfed611`.
 - HTML, JavaScript e CSS públicos verificados com HTTP 200.
 - Testes locais: 10 aprovados, incluindo a migração em Postgres embarcado.
 
@@ -38,4 +38,10 @@ Logo vetorial própria em assets/logo.svg. Novas telas públicas de login, cadas
 
 19 testes aprovados. Revisão real: menus e painel invisíveis na tela de acesso, responsividade móvel sem transbordamento, olhinho alterna o tipo do campo, tentativa de login inválido mostra erro e retira o estado de carregamento. Novos usuários mantêm estoques separados conforme decisão do proprietário.
 
-Pendências: SMTP de produção para confirmação e recuperação de qualquer usuário; credenciais OAuth Google. A revisão automática bloqueou a criação do projeto Google Cloud por consumo de cota e possíveis obrigações administrativas; foi solicitada autorização específica. Nenhum novo projeto Google foi criado. Não foi possível validar cadastro por e-mail ou Google de ponta a ponta sem essas configurações externas.
+Pendências: SMTP de produção para confirmação e recuperação de qualquer usuário; credenciais OAuth Google. Após autorização específica, o projeto Google Cloud Adega foi criado e a marca OAuth configurada com aceite autorizado da política. O cliente Web está preparado; a criação da credencial e seu armazenamento no Supabase aguardam confirmação específica. Não foi possível validar cadastro por e-mail ou Google de ponta a ponta sem essas configurações externas.
+
+## Isolamento entre adegas
+
+Migração 002 aplicada em produção: integridade por proprietário entre movimentação e produto, leitura sem elevação de privilégio e permissões restritas. Teste no Postgres real com duas contas temporárias confirmou RLS, bloqueio de alteração cruzada e integridade; a transação foi revertida integralmente. Nenhum registro real foi alterado. Testes locais: 20 aprovados. Frontend publicado limpa dados ao trocar de sessão e descarta respostas da sessão anterior, inclusive entre abas.
+
+O proprietário informou que ainda não possui domínio nem serviço SMTP e deseja manter serviços gratuitos. SMTP e login Google ainda não foram validados de ponta a ponta.
