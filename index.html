@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#14251f"><title>Adega | Gestão de bebidas</title><link rel="stylesheet" href="styles.css"></head>
+<body>
+<aside><a class="brand" href="#painel"><span>Ａ</span> Adega<span class="dot">.</span></a><p class="aside-label">GESTÃO DO SEU NEGÓCIO</p><nav id="navigation"><a href="#painel">◈ <span>Visão geral</span></a><a href="#produtos">▦ <span>Produtos e estoque</span></a><a href="#vendas">↗ <span>Vendas</span></a><a href="#compras">↙ <span>Compras</span></a><a href="#historico">≡ <span>Movimentações</span></a><a href="#relatorios">◷ <span>Relatórios</span></a></nav><div class="aside-bottom"><span class="status-dot"></span> Postgres · Supabase<p>Seu negócio, sob controle.</p></div></aside>
+<main><header><div><span class="eyebrow">ESPAÇO DE GESTÃO</span><p id="today"></p></div><div class="actions"><button class="secondary small" id="refresh">Atualizar</button><button class="secondary small" id="logout" hidden>Sair</button></div></header><section id="content"></section><footer>Adega · Gestão de bebidas <span>Dados armazenados no Supabase</span></footer></main>
+<dialog id="modal"><form id="modal-form"><div class="modal-heading"><h2 id="modal-title"></h2><button type="button" class="icon-button" id="close-modal" aria-label="Fechar">×</button></div><div id="modal-fields"></div><p id="form-error" role="alert"></p><div class="modal-actions"><button type="button" class="secondary" id="cancel-modal">Cancelar</button><button type="submit">Salvar produto</button></div></form></dialog>
+<div id="toast" role="status"></div><script src="app.js"></script>
+</body></html>

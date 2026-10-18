@@ -1,0 +1,16 @@
+{
+  "name": "adega",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "npm run build && wrangler dev",
+    "deploy": "npm run build && wrangler deploy",
+    "check": "node --check app.js && node --check src/worker.js && node --test",
+    "types": "wrangler types"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.10",
+    "wrangler": "^4.151.1"
+  }
+}
