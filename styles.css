@@ -260,3 +260,5 @@ body:has(#profile-menu:not([hidden])) #bottom-navigation{filter:blur(5px)}
 #catalog-settings{line-height:1.7;max-height:90svh;overflow:auto}#catalog-settings p{font-size:13px;color:#566c7a}#catalog-link{font-size:13px}#catalog-state{font-weight:600}
 
 main>section#content{min-height:calc(100svh - 158px)}
+
+.cancel-date{display:block;font-size:10px;color:#657684;margin-top:6px}.record-body .actions:empty{display:none}

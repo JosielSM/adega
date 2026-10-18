@@ -60,7 +60,7 @@ A sessão exige novo login quando expira, no máximo após uma hora; não há re
 
 ## Dados e relatórios
 
-Inclui cadastro, edição e inativação de bebidas, compras com custo médio, vendas, estoque mínimo, relatórios e CSV. Lucro é bruto, sem taxas, despesas e impostos. Editar custo no cadastro afeta operações futuras. Movimentações confirmadas são imutáveis nesta versão; cancelamentos e devoluções ainda não estão implementados.
+Inclui cadastro, edição e inativação de bebidas, compras com custo médio, vendas, estoque mínimo, relatórios e CSV. Lucro é bruto, sem taxas, despesas e impostos. Editar custo no cadastro afeta operações futuras. Vendas podem ser canceladas integralmente em Movimentações, com devolução ao estoque e exclusão dos indicadores de vendas. O registro original permanece marcado como cancelado. Cancelamento de compras e devoluções parciais não estão implementados.
 
 O download JSON exporta os registros da conta para consulta. A restauração local foi removida: restaurações devem usar os recursos de backup do Postgres/Supabase pelo administrador. Dados anteriores em localStorage não são migrados automaticamente. Exporte-os antes de trocar de versão, caso existam registros.
 
@@ -137,3 +137,9 @@ Antes de continuar, o catálogo é consultado novamente. Produtos indisponíveis
 ## Excluir produtos
 
 Migração 006_delete_product.sql: exclusão autenticada, somente do próprio produto, com idempotência e bloqueio de exclusão quando houver qualquer movimentação (inclusive estoque inicial). Em Produtos, Excluir abre confirmação; se houver histórico, oferece inativar. Exclusão não remove histórico nem registros de outras contas. Teste no Postgres embarcado verificou exclusão, repetição segura, bloqueio de acesso cruzado e preservação de produtos com histórico.
+
+## Cancelar venda
+
+Execute a migração 007_cancel_sale.sql uma vez. Em Movimentações ou nas movimentações recentes, Cancelar venda pede confirmação, devolve a quantidade ao estoque e retira o valor da receita, lucro, gráficos e ranking. O registro permanece com cancelledAt e status cancelado, inclusive no CSV. Reposição usa o custo histórico da venda ponderado com o estoque atual, sem alterar outras vendas. O cancelamento é integral e não estorna pagamentos. O operador deve confirmar que as bebidas permanecem ou retornaram à adega.
+
+A operação valida proprietário e tipo, usa a mesma trava por conta e idempotência dos comandos de estoque, rejeita segundo cancelamento e bloqueia compras/estoque inicial. Testes em Postgres embarcado verificaram reposição após compra com custo diferente, idempotência, isolamento e permissões anônimas. Nenhuma venda real foi cancelada durante a implementação.

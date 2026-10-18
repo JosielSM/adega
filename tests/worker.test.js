@@ -101,3 +101,13 @@ test('WhatsApp contact is normalized and saved only for authenticated account',a
  assert.equal((await worker.fetch(post('catalog/settings',{whatsapp:'(11) 99999-9999',owner_id:'other'},{cookie:'adega_session=account-a'}),env)).status,200);
  assert.equal((await worker.fetch(post('catalog/settings',{whatsapp:'123'},{cookie:'adega_session=account-a'}),env)).status,400);
 });
+
+test('cancel sale forwards current account token and idempotency to dedicated RPC',async t=>{
+ t.mock.method(globalThis,'fetch',async(url,options)=>{
+  assert.match(url,/rpc\/adega_cancel_sale$/);assert.equal(options.headers.Authorization,'Bearer account-a');
+  assert.deepEqual(JSON.parse(options.body),{p_id:'sale-id',p_request_id:'12345678-1234-1234-1234-123456789012'});
+  return Response.json({products:[],movements:[]});
+ });
+ const response=await worker.fetch(post('command',{action:'cancel_sale',payload:{id:'sale-id',owner_id:'other'},requestId:'12345678-1234-1234-1234-123456789012'},{cookie:'adega_session=account-a'}),env);
+ assert.equal(response.status,200);
+});

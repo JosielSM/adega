@@ -73,3 +73,7 @@ Versão b9d7063d-1409-4af1-ab4b-0d5053080de8. Migração 005 aplicada com sucess
 ## Confirmação de e-mail temporariamente desativada
 
 Em 18/10/2026, após solicitação e confirmação explícita do proprietário, Confirm email foi desativado e salvo no Supabase. Cadastro público permanece ativo e autentica automaticamente novos usuários com e-mail e senha. A aplicação já suporta esse retorno; não houve mudança no Worker publicado. Teste específico confirmou sessão em cookie HttpOnly sem expor tokens. Requisitos de senha e isolamento entre contas permanecem. Recuperação de senha para terceiros ainda depende da configuração SMTP.
+
+## Cancelamento de vendas
+
+Versão ba77691a-2167-48a8-9902-65cb59e593fa. Migração 007 aplicada com sucesso após renovar sessão administrativa expirada. Venda cancelada permanece no histórico com data/status, devolve quantidade ao estoque com custo histórico ponderado e deixa de entrar nos indicadores. Confirmação informa que não há estorno de pagamento. Trinta e três testes passaram no conjunto completo; teste adicional da API de cancelamento também passou. Não houve cancelamento de venda real em produção.

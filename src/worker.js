@@ -133,7 +133,8 @@ export default {
       }
       if (url.pathname === '/api/command' && request.method === 'POST') {
         const data = await body(request);
-        if (!['create_product', 'update_product', 'set_active', 'movement', 'delete_product'].includes(data.action) || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(data.requestId || '') || !data.payload || typeof data.payload !== 'object' || Array.isArray(data.payload)) throw new ApiError(400, 'Operação inválida.');
+        if (!['create_product', 'update_product', 'set_active', 'movement', 'delete_product', 'cancel_sale'].includes(data.action) || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(data.requestId || '') || !data.payload || typeof data.payload !== 'object' || Array.isArray(data.payload)) throw new ApiError(400, 'Operação inválida.');
+        if(data.action==='cancel_sale')return json(await supabase(env,'/rest/v1/rpc/adega_cancel_sale',token,{p_id:data.payload.id,p_request_id:data.requestId}));
         if(data.action==='delete_product')return json(await supabase(env,'/rest/v1/rpc/adega_delete_product',token,{p_id:data.payload.id,p_request_id:data.requestId}));
         return json(await supabase(env, '/rest/v1/rpc/adega_command', token, { p_action: data.action, p_payload: data.payload, p_request_id: data.requestId }));
       }
