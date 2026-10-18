@@ -76,3 +76,19 @@ test('profile rejects unauthenticated, oversized and executable logo data', asyn
     assert.equal((await worker.fetch(post('profile',data,{cookie:'adega_session=account-a'}),env)).status,400);
   }
 });
+
+test('public catalog ignores browser session and exposes only explicit catalog RPC',async t=>{
+  t.mock.method(globalThis,'fetch',async(url,options)=>{
+    assert.equal(url,'https://project.supabase.co/rest/v1/rpc/adega_public_catalog');
+    assert.equal(options.headers.Authorization,undefined);
+    return Response.json({name:'Loja A',logo:'',products:[{name:'Bebida',brand:'Marca',category:'Vinhos',price:20}]});
+  });
+  const response=await worker.fetch(new Request('https://adega.example/api/catalog?loja=12345678-1234-1234-1234-123456789012',{headers:{cookie:'adega_session=private-token'}}),env);
+  assert.equal(response.status,200);assert.equal(response.headers.get('cache-control'),'no-store');
+  assert.equal((await response.json()).products.length,1);
+});
+
+test('catalog settings need authentication and invalid links reveal nothing',async()=>{
+  assert.equal((await worker.fetch(new Request('https://adega.example/api/catalog/settings'),env)).status,401);
+  assert.equal((await worker.fetch(new Request('https://adega.example/api/catalog?loja=invalid'),env)).status,404);
+});

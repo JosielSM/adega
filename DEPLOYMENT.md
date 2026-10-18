@@ -61,3 +61,7 @@ Versão 8f0b360f-789f-4790-b9b7-cde059b86671. Removidos Atualizar e Sair da barr
 ## Resumos móveis
 
 Versão 52b66c32-71c7-4a1a-8c97-768bd2cfa5ad. Listas móveis expansíveis para produtos e movimentações, Ver mais e cartões menores. Revisão autenticada em 390 px: detalhes, ação Editar, cancelamento e detalhes de movimentação conferidos; página sem transbordamento horizontal. 25 testes aprovados e teste de sincronização repetido após ajuste para preservar detalhes abertos.
+
+## Catálogo compartilhável
+
+Publicação 13b2379f-7e5b-42d5-9403-dcc4ae7591ca. Migração 004 aplicada com sucesso. Configuração por conta, publicação optativa, link independente, cópia/compartilhamento e desativação. Página pública de consulta com busca e categorias. 27 testes aprovados, incluindo isolamento entre lojas, campos públicos restritos e bloqueio após desativar. Nenhuma adega foi publicada automaticamente.

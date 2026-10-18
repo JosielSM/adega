@@ -96,8 +96,21 @@ export default {
         const auth = await supabase(env, '/auth/v1/token?grant_type=password', null, { email: data.email.trim(), password: data.password });
         return json({ ok: true }, 200, { 'Set-Cookie': cookie(request, auth.access_token, Math.min(auth.expires_in, 3600)) });
       }
+      if (url.pathname === '/api/catalog' && request.method === 'GET') {
+        const slug=url.searchParams.get('loja') || '';
+        if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug)) throw new ApiError(404,'Catálogo indisponível.');
+        const catalog=await supabase(env,'/rest/v1/rpc/adega_public_catalog',null,{p_slug:slug});
+        if(!catalog)throw new ApiError(404,'Catálogo indisponível.');
+        return json(catalog);
+      }
       const token = session(request);
       if (!token) throw new ApiError(401, 'Entre para acessar sua adega.');
+      if(url.pathname === '/api/catalog/settings') {
+        if(request.method==='GET')return json(await supabase(env,'/rest/v1/rpc/adega_catalog_settings',token,{}));
+        const data=await body(request);
+        if(typeof data.enabled!=='boolean')throw new ApiError(400,'Informe se deseja publicar o catálogo.');
+        return json(await supabase(env,'/rest/v1/rpc/adega_catalog_configure',token,{p_enabled:data.enabled}));
+      }
       if (url.pathname === '/api/profile') {
         let profile;
         if (request.method === 'POST') {

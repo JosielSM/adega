@@ -14,3 +14,4 @@ for (const size of [192,512]) await copyFile('assets/icon-' + size + '.png', 'di
 await copyFile('navigation.js', 'dist/navigation.js');
 await copyFile('profile.js', 'dist/profile.js');
 await copyFile('sync.js', 'dist/sync.js');
+for (const file of ['catalog.html','catalog.css','catalog.js','catalog-settings.js']) await copyFile(file, 'dist/' + file);

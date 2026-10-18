@@ -121,3 +121,9 @@ No celular, barra superior fixa com perfil e menu de três linhas. O menu fecha 
 ## Listas compactas no celular
 
 Em até 700 px, produtos usam resumo expansível com nome, preço, saldo e status; detalhes exibem categoria, marca, código, custo e ações. Primeiros oito produtos visíveis; Ver mais revela os demais sem perder os filtros. Movimentações mostram três resumos iniciais, detalhes de data/valor/cliente/pagamento e expansão para as restantes. Desktop mantém tabelas. Banner e cartões reduzidos no celular. Atualizações automáticas não substituem detalhes abertos; alterações pendentes aparecem ao terminar a interação. Expansão nativa funciona por toque ou teclado, com foco visível e ações identificadas.
+
+## Catálogo público por adega
+
+Execute a migração 004_public_catalog.sql uma vez. No perfil, Catálogo para clientes permite publicar e gerar link próprio, copiar, compartilhar e desativar. Nenhum catálogo é ativado automaticamente. Nome, logo, produtos ativos com saldo positivo, marca, categoria e preço de venda ficam públicos somente após publicação. Custos, saldo numérico, histórico, e-mail e IDs de proprietário não são retornados pela função pública. Configurações têm RLS e exigem a conta autenticada. O link usa UUID independente e mantém o mesmo endereço ao reativar.
+
+A página catalog.html funciona sem login, tem busca/categorias e consulta novamente os dados a cada 30 segundos enquanto visível. Desativar bloqueia novas consultas; cópias já vistas ou salvas por clientes não podem ser recolhidas. O catálogo permite consulta, sem carrinho, pedidos ou baixa automática de estoque.

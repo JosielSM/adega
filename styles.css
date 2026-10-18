@@ -256,3 +256,5 @@ body.menu-open main,
 body.menu-open #bottom-navigation{filter:blur(5px)}
 body:has(#profile-menu:not([hidden])) #bottom-navigation{filter:blur(5px)}
 @media(min-width:701px){body:has(#profile-menu:not([hidden]))>aside{filter:blur(5px)}}
+
+#catalog-settings{line-height:1.7;max-height:90svh;overflow:auto}#catalog-settings p{font-size:13px;color:#566c7a}#catalog-link{font-size:13px}#catalog-state{font-weight:600}

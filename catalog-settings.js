@@ -1,0 +1,12 @@
+(() => {
+  const dialog=document.querySelector('#catalog-settings'),feedback=document.querySelector('#catalog-feedback'),field=document.querySelector('#catalog-link'),toggle=document.querySelector('#catalog-publish');
+  let settings={enabled:false,slug:null};
+  function paint(){field.value=settings.slug?location.origin+'/catalog.html?loja='+settings.slug:'';toggle.textContent=settings.enabled?'Desativar catálogo':'Gerar link e publicar catálogo';document.querySelector('#catalog-state').textContent=settings.enabled?'Publicado: qualquer pessoa com o link pode ver os produtos disponíveis e preços.':'Catálogo desativado. Seus produtos ainda não estão públicos.';for(const id of ['catalog-copy','catalog-open','catalog-share'])document.getElementById(id).disabled=!settings.enabled;}
+  document.querySelector('#open-catalog-settings').onclick=async()=>{dialog.showModal();feedback.textContent='Carregando…';toggle.disabled=true;try{settings=await api('catalog/settings');paint();feedback.textContent='';}catch(error){feedback.textContent=error.message;}finally{toggle.disabled=false;}};
+  document.querySelector('#close-catalog-settings').onclick=()=>dialog.close();
+  toggle.onclick=async()=>{toggle.disabled=true;feedback.textContent='Salvando…';try{settings=await api('catalog/settings',{enabled:!settings.enabled});paint();feedback.textContent=settings.enabled?'Link pronto para compartilhar.':'Catálogo desativado. O link não mostra mais produtos.';}catch(error){feedback.textContent=error.message;}finally{toggle.disabled=false;}};
+  document.querySelector('#catalog-copy').onclick=async()=>{try{await navigator.clipboard.writeText(field.value);feedback.textContent='Link copiado!';}catch{field.focus();field.select();feedback.textContent='Selecione e copie o link acima.';}};
+  document.querySelector('#catalog-open').onclick=()=>window.open(field.value,'_blank','noopener');
+  document.querySelector('#catalog-share').onclick=async()=>{try{if(navigator.share)await navigator.share({title:'Catálogo da adega',url:field.value});else document.querySelector('#catalog-copy').click();}catch(error){if(error.name!=='AbortError')feedback.textContent='Não foi possível compartilhar. Copie o link.';}};
+  new MutationObserver(()=>{if(document.body.classList.contains('auth-mode')){settings={enabled:false,slug:null};field.value='';dialog.close();}}).observe(document.body,{attributes:true,attributeFilter:['class']});
+})();
