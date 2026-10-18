@@ -20,7 +20,7 @@
   }
   window.addEventListener('scroll', schedule, { passive: true });
   window.addEventListener('resize', schedule, { passive: true });
-  window.addEventListener('hashchange', schedule);
+  window.addEventListener('catalog-ready', schedule);
   motion.addEventListener('change', schedule);
   schedule();
 })();

@@ -13,11 +13,12 @@
   async function load(){
     retry.hidden=true;
     try{const response=await fetch('/api/catalog?loja='+encodeURIComponent(new URLSearchParams(location.search).get('loja')||''),{credentials:'omit',cache:'no-store'});const result=await response.json();if(!response.ok)throw Error(result.error||'Catálogo indisponível.');
+      document.querySelector('.brand-scene').hidden=false;window.dispatchEvent(new Event('catalog-ready'));
       products=result.products;document.title=result.name+' · Catálogo';document.querySelector('#store-name').textContent=result.name;
       document.querySelector('#store-logo').src=/^data:image\/png;base64,/.test(result.logo)?result.logo:'/assets/logo.svg';
       const selected=category.value;category.replaceChildren(new Option('Todas',''));for(const name of [...new Set(products.map(p=>p.category))])category.add(new Option(name,name));category.value=selected;
       document.querySelector('#catalog-filters').hidden=false;document.querySelector('#catalog-note').hidden=false;render();
-    }catch(error){products=[];document.querySelector('#catalog-products').replaceChildren();document.querySelector('#catalog-filters').hidden=true;document.querySelector('#catalog-note').hidden=true;status.textContent=error.message;retry.hidden=false;}
+    }catch(error){document.querySelector('.brand-scene').hidden=true;products=[];document.querySelector('#catalog-products').replaceChildren();document.querySelector('#catalog-filters').hidden=true;document.querySelector('#catalog-note').hidden=true;status.textContent=error.message;retry.hidden=false;}
   }
   search.oninput=render;category.onchange=render;retry.onclick=load;
   setInterval(()=>{if(!document.hidden)load();},30000);window.addEventListener('online',load);load();
