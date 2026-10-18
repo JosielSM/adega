@@ -133,3 +133,7 @@ A página catalog.html funciona sem login, tem busca/categorias e consulta novam
 Execute a migração 005_catalog_whatsapp.sql uma vez. Em Perfil > Catálogo para clientes, salve o WhatsApp brasileiro com DDD; o número fica público quando o catálogo é publicado. Sem número configurado, compras pelo catálogo ficam indisponíveis. O cliente adiciona itens ao carrinho em memória, ajusta quantidades (1 a 99), remove, inclui observações e finaliza pelo WhatsApp. O navegador abre uma mensagem para o número da adega; o cliente confirma o envio no WhatsApp.
 
 Antes de continuar, o catálogo é consultado novamente. Produtos indisponíveis são removidos e mudanças de preço pedem nova conferência. Total é estimado; disponibilidade, entrega e pagamento são confirmados pela adega. Abrir ou enviar a mensagem não registra venda, cobra pagamento ou baixa estoque. O carrinho não é salvo após recarregar/fechar a página.
+
+## Excluir produtos
+
+Migração 006_delete_product.sql: exclusão autenticada, somente do próprio produto, com idempotência e bloqueio de exclusão quando houver qualquer movimentação (inclusive estoque inicial). Em Produtos, Excluir abre confirmação; se houver histórico, oferece inativar. Exclusão não remove histórico nem registros de outras contas. Teste no Postgres embarcado verificou exclusão, repetição segura, bloqueio de acesso cruzado e preservação de produtos com histórico.

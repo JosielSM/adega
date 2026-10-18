@@ -11,7 +11,7 @@ test('two stores: direct RLS, ownership injection, all commands, reports and ide
       create table auth.users(id uuid primary key);
       create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
       grant usage on schema auth to authenticated,anon;`);
-    for(const file of ['001_adega.sql','002_account_isolation.sql','003_company_profile.sql','004_public_catalog.sql','005_catalog_whatsapp.sql'])await db.exec(await readFile(new URL('../supabase/migrations/'+file,import.meta.url),'utf8'));
+    for(const file of ['001_adega.sql','002_account_isolation.sql','003_company_profile.sql','004_public_catalog.sql','005_catalog_whatsapp.sql','006_delete_product.sql'])await db.exec(await readFile(new URL('../supabase/migrations/'+file,import.meta.url),'utf8'));
     const a=randomUUID(),b=randomUUID(),request=randomUUID();
     await db.query('insert into auth.users values($1),($2)',[a,b]);
     const asUser=async id=>{await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[id]);await db.exec('set role authenticated');};
@@ -25,6 +25,7 @@ test('two stores: direct RLS, ownership injection, all commands, reports and ide
     const catalogA=(await db.query('select public.adega_catalog_configure(true) as result')).rows[0].result;
     await command('movement',{id:pa,type:'sale',quantity:2,price:30,owner_id:b});
     await asUser(b);
+    await assert.rejects(db.query('select public.adega_delete_product($1,$2)',[pa,randomUUID()]),/não encontrado/);
     assert.deepEqual((await db.query('select public.adega_profile_get() as profile')).rows[0].profile,{companyName:'',logo:''});
     await db.query("select public.adega_profile_save('Loja B','')");
     assert.equal((await db.query('select * from public.adega_profiles where owner_id=$1',[a])).rows.length,0);
@@ -56,6 +57,13 @@ test('two stores: direct RLS, ownership injection, all commands, reports and ide
     assert.equal(finalA.products.length,1);assert.equal(finalA.products[0].stock,8);
     assert.equal(finalA.movements.filter(m=>m.type==='sale').reduce((n,m)=>n+m.quantity*m.price,0),60);
     assert.ok(finalA.movements.every(m=>m.productId===pa));
+    await assert.rejects(db.query('select public.adega_delete_product($1,$2)',[pa,randomUUID()]),/possui movimentações/);
+    const temporary=await command('create_product',{...data,name:'Cadastro vazio',code:'',stock:0});
+    const emptyId=temporary.products.find(p=>p.name==='Cadastro vazio').id;
+    const deleteRequest=randomUUID();
+    await db.query('select public.adega_delete_product($1,$2)',[emptyId,deleteRequest]);
+    await db.query('select public.adega_delete_product($1,$2)',[emptyId,deleteRequest]);
+    assert.equal((await state()).products.some(p=>p.id===emptyId),false);
     await assert.rejects(command('movement',{id:pb,type:'sale',quantity:1,price:30}),/não encontrado/);
     await db.exec('reset role');
     await assert.rejects(db.query("insert into public.adega_movements(owner_id,product_id,name,type,quantity,price,cost) values($1,$2,'invalid','sale',1,1,1)",[b,pa]),/adega_movements_same_account/);
