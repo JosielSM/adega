@@ -13,7 +13,7 @@ As funções SQL validam as operações e calculam estoque e custo médio dentro
 ## Preparar o Supabase
 
 1. Crie um projeto chamado **Adega**.
-2. Execute as migrações de `supabase/migrations/001_adega.sql` até `008_packaging.sql`, em ordem, uma vez cada, no SQL Editor. A migração cria tabelas, índices, RLS e funções. Use um projeto novo ou confira conflitos de nomes antes da aplicação.
+2. Execute as migrações de `supabase/migrations/001_adega.sql` até `009_product_removal.sql`, em ordem, uma vez cada, no SQL Editor. A migração cria tabelas, índices, RLS e funções. Use um projeto novo ou confira conflitos de nomes antes da aplicação.
 3. Em Authentication, habilite cadastro público; no estado atual, a confirmação de e-mail está desativada temporariamente por decisão do proprietário e mantenha login anônimo desabilitado. Configure senha mínima de 8 caracteres, com letras maiúsculas, minúsculas, número e símbolo. Contas existentes continuam disponíveis.
 4. Copie a URL e a chave **publishable** (ou a chave legada **anon**). Não use `service_role`, secret key ou senha do Postgres.
 
@@ -155,3 +155,9 @@ O catálogo oferece unidade e embalagem como opções de compra, com seus preço
 O histórico guarda quantidade de embalagens, unidades por embalagem, nome e total pago na operação. Alterar a embalagem depois não muda vendas anteriores. Custo médio usa o valor total da reposição dividido pelas unidades recebidas; totais financeiros não dependem do arredondamento do preço convertido por unidade. Cancelar venda devolve as unidades originais. Testes cobrem embalagens de 12 e 6, vendas avulsas, reposição, preços distintos, cancelamento, repetição idempotente, isolamento e carrinho misto.
 
 Seleções de produto, categoria, pagamento e data usam controles próprios da Adega, com busca, teclado e fundo desfocado. Os controles originais permanecem como valores do formulário, sem exibir seletores nativos.
+
+## Exclusão de produtos com histórico
+
+A migração 009 substitui a antiga restrição de exclusão: Excluir produto pede confirmação e registra deleted_at, retirando o cadastro de Produtos, estoque disponível e catálogo. Movimentações e indicadores históricos permanecem. O código pode ser reutilizado em um novo cadastro, com outro ID e estoque independente. Compras, vendas, edições e reativação do produto removido são rejeitadas pelo banco; repetir o mesmo pedido de exclusão é idempotente. A operação usa o proprietário autenticado e a trava por conta.
+
+Cancelar uma venda antiga de produto excluído mantém o produto fora do estoque disponível e não credita o saldo a um novo produto com o mesmo código. O modal informa essa condição. Exclusão não estorna pagamentos nem apaga o histórico financeiro. Não há restauração pela interface; os registros técnicos permanecem no banco. Nenhum produto real foi excluído durante a validação.
