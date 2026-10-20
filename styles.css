@@ -277,6 +277,7 @@ html{touch-action:pan-x pan-y}
 .product-form-section h3>span{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#eaf2f6;color:#186182;font-size:13px}
 .product-registration label{margin:0;font-size:13px;line-height:1.5}
 .product-form-section>label+label{margin-top:16px}
+#product-box-name{margin-bottom:18px}
 .product-registration small{display:block;font-size:11px;font-weight:400;color:#687987;margin-top:6px}
 .product-registration .form-grid{gap:16px}
 .purchase-choice{display:grid;grid-template-columns:1fr 1fr;gap:10px;border:0;padding:0;margin:0 0 20px;min-width:0}

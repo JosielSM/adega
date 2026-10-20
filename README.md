@@ -167,3 +167,5 @@ Cancelar uma venda antiga de produto excluído mantém o produto fora do estoque
 O formulário reúne três seções: bebida, forma da compra e preços de venda. Escolher Por caixa revela quantidade de caixas, unidades por caixa e custo pago por caixa. O resumo calcula saldo total e custo por unidade imediatamente; o comando existente recebe o custo convertido e a quantidade de caixas, sem dupla conversão do saldo. Por unidade oculta e desabilita campos de caixa. Marca, código, nome da embalagem e alerta mínimo ficam em Mais informações.
 
 Na edição não há entrada de estoque; o custo continua sendo informado por unidade, preservando a precisão do custo médio existente. Os preços de caixa e unidade continuam independentes. Alterações de saldo devem usar Repor estoque.
+
+O tipo de embalagem fica visível na seção da compra: Caixa, Grade, Fardo ou Pack. As perguntas de quantidade, custo e venda acompanham o nome escolhido, que também é salvo para estoque, movimentações e catálogo. Nomes personalizados já cadastrados são mantidos ao editar.

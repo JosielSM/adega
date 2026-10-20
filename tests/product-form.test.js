@@ -36,3 +36,14 @@ test('switching to units does not submit hidden box values; editing never adds i
  await edit.form.onsubmit({preventDefault(){}});
  assert.equal(edit.payload().action,'update_product');assert.equal(edit.payload().data.cost,5.123456);assert.equal(edit.payload().data.stock,undefined);
 });
+
+test('package choice changes questions and saves grade, fardo and pack without changing the unit conversion',async()=>{
+ for(const [name,question,price] of [['Grade','Quantas grades comprou? *','da grade completa'],['Fardo','Quantos fardos comprou? *','do fardo completo'],['Pack','Quantos packs comprou? *','do pack completo']]){
+  const f=await fixture();f.inputs.purchase_mode.value='pack';f.inputs.pack_name.value=name;f.inputs.stock.value='3';f.inputs.purchase_cost.value='60';f.fields.onchange();
+  assert.equal(f.node('#product-quantity-label').textContent,question);
+  assert.match(f.node('#product-pack-price-label').textContent,new RegExp(price));
+  assert.equal(f.node('#product-unit-total').textContent,'36 unidades');
+  await f.form.onsubmit({preventDefault(){}});
+  assert.equal(f.payload().data.pack_name,name);assert.equal(f.payload().data.cost,5);
+ }
+});
