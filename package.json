@@ -6,7 +6,7 @@
     "build": "node scripts/build.mjs",
     "dev": "npm run build && wrangler dev",
     "deploy": "npm run build && wrangler deploy",
-    "check": "node --check app.js && node --check product-form.js && node --check src/worker.js && node --test",
+    "check": "node --check app.js && node --check product-form.js && node --check money-inputs.js && node --check src/worker.js && node --test",
     "types": "wrangler types"
   },
   "devDependencies": {

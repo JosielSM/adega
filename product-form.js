@@ -25,8 +25,8 @@ function productModal(id){
    </fieldset>
    <label id="product-box-name">Tipo de embalagem<select name="pack_name">${packNames.map(name=>`<option value="${esc(name)}" ${name===selectedPack?'selected':''}>${esc(name)}</option>`).join('')}</select></label>
    <div class="form-grid product-purchase-fields">
-    ${!editing?`<label><span id="product-quantity-label">Quantas unidades comprou? *</span><input name="stock" type="number" value="0" min="0" step="1" required inputmode="numeric"><small>Use 0 para cadastrar sem estoque.</small></label>`:''}
-    <label id="product-box-size"><span id="product-size-label">Quantas unidades vêm em cada caixa? *</span><input name="pack_size" type="number" value="${packed?p.pack_size:12}" min="2" max="10000" step="1" required inputmode="numeric"></label>
+    ${!editing?`<label><span id="product-quantity-label">Quantas unidades comprou? *</span><input name="stock" type="number" value="" min="0" step="1" required inputmode="numeric" placeholder="Ex.: 3"><small>Use 0 para cadastrar sem estoque.</small></label>`:''}
+    <label id="product-box-size"><span id="product-size-label">Quantas unidades vêm em cada caixa? *</span><input name="pack_size" type="number" value="${packed?p.pack_size:''}" min="2" max="10000" step="1" required inputmode="numeric" placeholder="Ex.: 12"></label>
     <label><span id="product-cost-label">${editing?'Custo por unidade (R$) *':'Quanto pagou por unidade (R$)? *'}</span><input name="purchase_cost" type="number" value="${editing?esc(p.cost):''}" min="0" step="${editing?'0.000001':'0.01'}" required inputmode="decimal" placeholder="0,00"></label>
    </div>
    <div class="purchase-preview" aria-live="polite" aria-atomic="true"><span>${editing?'Estoque atual':'Total que entrará no estoque'}</span><strong id="product-unit-total"></strong><p id="product-purchase-detail"></p></div>
@@ -38,7 +38,7 @@ function productModal(id){
   </section>
   <details class="product-extra"><summary>Mais informações <span>Marca, código e alerta de estoque</span></summary><div class="form-grid">
    ${field('Marca (opcional)','brand',p.brand,'text','maxlength="150"')}${field('Código / código de barras (opcional)','code',p.code,'text','maxlength="150"')}
-   ${field('Avisar quando restarem (unidades)','min',p.min,'number','required min="0" step="1" inputmode="numeric"')}
+   ${field('Avisar quando restarem (unidades)','min',editing?p.min:'','number','min="0" step="1" inputmode="numeric" placeholder="Ex.: 5"')}
 
   </div></details>
  </div>`;
@@ -58,7 +58,7 @@ function productModal(id){
   const summary=productPurchaseSummary(isBox?'pack':'unit',editing?0:quantity,size,cost);
   const validSize=!isBox||(Number.isInteger(size)&&size>=2&&size<=10000);
   const units=editing?p.stock:summary.units;
-  fields.querySelector('#product-unit-total').textContent=validSize&&Number.isSafeInteger(units)&&units>=0?units+' unidades':'Informe a quantidade por embalagem';
+  fields.querySelector('#product-unit-total').textContent=!editing&&input('stock').value===''?'Preencha as quantidades':validSize&&Number.isSafeInteger(units)&&units>=0?units+' unidades':'Informe a quantidade por embalagem';
   fields.querySelector('#product-purchase-detail').textContent=editing?'O saldo não muda ao editar. Use Repor estoque para novas compras.':validSize?(isBox?quantity+' '+(quantity===1?name:plural)+' × '+size+' unidades. ':'')+(input('purchase_cost').value!==''?'Compra: '+money(summary.totalCost)+' · Custo por unidade: '+money(summary.unitCost):'Informe o custo da compra acima.'):'Cada embalagem precisa ter de 2 a 10.000 unidades.';
   fields.querySelector('#product-box-sale-note').textContent=isBox&&validSize?'Cada '+name+' vendid'+(feminine?'a':'o')+' descontará '+size+' unidades do mesmo estoque.':'';
  }

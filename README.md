@@ -169,3 +169,7 @@ O formulário reúne três seções: bebida, forma da compra e preços de venda.
 Na edição não há entrada de estoque; o custo continua sendo informado por unidade, preservando a precisão do custo médio existente. Os preços de caixa e unidade continuam independentes. Alterações de saldo devem usar Repor estoque.
 
 O tipo de embalagem fica visível na seção da compra: Caixa, Grade, Fardo ou Pack. As perguntas de quantidade, custo e venda acompanham o nome escolhido, que também é salvo para estoque, movimentações e catálogo. Nomes personalizados já cadastrados são mantidos ao editar.
+
+## Máscaras e valores de entrada
+
+Novos cadastros iniciam estoque, tamanho da embalagem e alerta mínimo sem números pré-preenchidos. Exemplos são placeholders. Quantidade em novas vendas e reposições também começa vazia. Valores monetários usam uma entrada visual em reais, com vírgula e duas casas, mantendo o controle numérico original como única fonte do FormData e dos cálculos. Valores salvos e preços do produto selecionado continuam disponíveis; o custo médio de edição mantém a precisão armazenada até uma alteração explícita.

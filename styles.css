@@ -278,6 +278,7 @@ html{touch-action:pan-x pan-y}
 .product-registration label{margin:0;font-size:13px;line-height:1.5}
 .product-form-section>label+label{margin-top:16px}
 #product-box-name{margin-bottom:18px}
+.money-input-error{color:#a74d3c!important;font-size:12px}.money-input-error[hidden]{display:none!important}.money-mask[aria-invalid=true]{border-color:#a74d3c}
 .product-registration small{display:block;font-size:11px;font-weight:400;color:#687987;margin-top:6px}
 .product-registration .form-grid{gap:16px}
 .purchase-choice{display:grid;grid-template-columns:1fr 1fr;gap:10px;border:0;padding:0;margin:0 0 20px;min-width:0}
