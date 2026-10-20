@@ -234,7 +234,7 @@ header #sync-status{font-size:10px;color:#657684;margin-top:5px}
 }
 @media(max-width:700px){
  body:not(.auth-mode) #bottom-navigation{grid-template-columns:1.25fr 1fr 1fr}
- #bottom-navigation>#bottom-new-product{order:0}
+ #bottom-navigation>[data-bottom-page=compras]{order:0}
  #bottom-navigation>[data-bottom-page=painel]{order:1}
  #bottom-navigation>[data-bottom-page=vendas]{order:2}
 }

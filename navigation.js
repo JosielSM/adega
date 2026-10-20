@@ -28,19 +28,6 @@
       else link.removeAttribute('aria-current');
     });
   };
-  const productShortcut = document.querySelector('#bottom-new-product');
-  new MutationObserver(() => productShortcut.setAttribute('aria-pressed',String(document.querySelector('#modal').open))).observe(document.querySelector('#modal'),{attributes:true,attributeFilter:['open']});
-  document.querySelector('#bottom-new-product').onclick = () => {
-    if (!authenticated) return;
-    close();
-    if (location.hash === '#produtos') productModal();
-    else {
-      window.addEventListener('hashchange', () => {
-        if (authenticated && location.hash === '#produtos') productModal();
-      }, {once:true});
-      location.hash = 'produtos';
-    }
-  };
   window.addEventListener('hashchange', updateBottom);
   updateBottom();
   matchMedia('(max-width:700px)').addEventListener('change', close);
