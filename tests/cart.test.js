@@ -28,3 +28,11 @@ test('typed quantities can exceed 99 and share the available stock across units 
  assert.equal(setCartQuantity(cart,unit,0),true);assert.equal(cart.has(unit.id),false);
  assert.equal(cartCapacity(cart,pack),20);
 });
+
+test('WhatsApp order includes the chosen payment method together with address and total',()=>{
+ for(const payment of ['Pix','Dinheiro','Cartão de débito','Cartão de crédito']){
+  const text=orderMessage([{name:'Bebida',price:5,quantity:3}],'Bairro: Centro\nRua: A\nNúmero: 10',payment);
+  assert.ok(text.endsWith('💳 *Forma de pagamento*\n'+payment));
+  assert.match(text,/15,00/);assert.match(text,/Bairro: Centro/);
+ }
+});

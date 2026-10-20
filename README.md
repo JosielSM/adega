@@ -177,3 +177,5 @@ Novos cadastros iniciam estoque, tamanho da embalagem e alerta mínimo sem núme
 ## Escolha de quantidade no catálogo
 
 Adicionar ao carrinho abre um diálogo com campo numérico vazio, botões de aumentar/diminuir, disponibilidade e subtotal. Antes de adicionar a quantidade escolhida, o catálogo é consultado novamente; mudanças de preço ou carrinho pedem nova conferência. Dentro do carrinho, a quantidade pode ser digitada diretamente ou ajustada pelos botões. O limite fixo de 99 foi removido; quantidades inteiras respeitam o estoque compartilhado entre unidades e embalagens. Pedidos continuam sem reserva ou baixa automática, com conferência adicional antes de abrir o WhatsApp.
+
+Na finalização do catálogo, o cliente precisa escolher Pix, Dinheiro, Cartão de débito ou Cartão de crédito. A seleção começa vazia e usa o seletor visual da Adega. A mensagem do WhatsApp inclui a forma de pagamento após o endereço, sem coletar dados de cartão ou processar pagamentos.

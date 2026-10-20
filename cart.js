@@ -1,9 +1,10 @@
-export function orderMessage(items,address='') {
+export function orderMessage(items,address='',payment='') {
   const money=n=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
   const total=items.reduce((sum,item)=>sum+Math.round(item.price*100)*item.quantity,0)/100;
   const sections=items.map(item=>`🛒 *${item.quantity} × ${item.name}*\n🏷️ Valor unitário: ${money(item.price)}\n💵 Valor: ${money(Math.round(item.price*100)*item.quantity/100)}`);
   sections.push(`💰 *Total a pagar: ${money(total)}*`);
   if(address.trim())sections.push('📍 *Endereço de entrega*\n'+address.trim().replace(/^Bairro:/gm,'🏘️ Bairro:').replace(/^Rua:/gm,'🛣️ Rua:').replace(/^Número:/gm,'🔢 Número:'));
+  if(payment.trim())sections.push('💳 *Forma de pagamento*\n'+payment.trim());
   return sections.join('\n\n');
 }
 export function reconcileCart(cart,products) {
