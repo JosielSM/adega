@@ -269,4 +269,33 @@ body:has(#connection-status:not([hidden])){--connection-offset:62px}#connection-
 
 html{touch-action:pan-x pan-y}
 
+/* Product registration follows the purchase, with live unit conversion. */
+#modal:has(.product-registration){width:min(650px,calc(100vw - 24px));max-height:90svh;overflow:auto}
+.product-registration [hidden]{display:none!important}
+.product-form-section{padding:0 0 22px;margin:0 0 22px;border-bottom:1px solid #e4e8eb}
+.product-form-section h3{display:flex;align-items:center;gap:10px;margin:0 0 20px;font-size:16px;color:#19394f}
+.product-form-section h3>span{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#eaf2f6;color:#186182;font-size:13px}
+.product-registration label{margin:0;font-size:13px;line-height:1.5}
+.product-form-section>label+label{margin-top:16px}
+.product-registration small{display:block;font-size:11px;font-weight:400;color:#687987;margin-top:6px}
+.product-registration .form-grid{gap:16px}
+.purchase-choice{display:grid;grid-template-columns:1fr 1fr;gap:10px;border:0;padding:0;margin:0 0 20px;min-width:0}
+.purchase-choice legend{font-size:12px;color:#687987;margin-bottom:10px}
+.purchase-choice label{display:flex;gap:10px;align-items:center;min-height:78px;border:1px solid #d8e0e6;border-radius:10px;padding:12px;cursor:pointer;background:white}
+.purchase-choice label:has(input:checked){background:#eaf2f6;border-color:#186182;box-shadow:inset 0 0 0 1px #186182}
+.purchase-choice input{width:18px;height:18px;margin:0;accent-color:#186182;flex-shrink:0}
+.purchase-choice small{margin:2px 0 0;font-size:11px}.purchase-choice strong{font-size:14px}
+.purchase-choice label:focus-within{outline:2px solid #9c6d49;outline-offset:3px}
+.product-purchase-fields:has(#product-box-size:not([hidden]))>label:last-child{grid-column:1/-1}
+.product-form-section .form-grid:has(#product-box-price[hidden]){grid-template-columns:1fr}
+.purchase-preview{padding:16px 18px;background:#edf4f7;border:1px solid #d6e5ed;border-radius:10px;margin-top:18px}
+.purchase-preview>span{font-size:12px;color:#536f80}.purchase-preview>strong{display:block;font-size:25px;color:#186182;margin:5px 0}
+.purchase-preview p,.product-form-help{font-size:12px;color:#536f80;line-height:1.6;margin:6px 0 0;overflow-wrap:anywhere}
+.product-form-help:empty{display:none}
+.product-extra{border:1px solid #e0e6ea;border-radius:10px;padding:14px 16px}
+.product-extra summary{cursor:pointer;font-weight:600;color:#31566d;font-size:13px;min-height:32px}
+.product-extra summary span{display:block;font-size:11px;color:#687987;font-weight:400;margin:5px 0 0 15px}
+.product-extra[open] summary{margin-bottom:20px}
+@media(max-width:700px){.purchase-choice{gap:8px}.purchase-choice label{padding:10px 8px;gap:7px}.purchase-choice strong{font-size:13px}.purchase-choice small{font-size:10px}.product-registration input{font-size:16px;min-height:46px}.purchase-choice input{min-height:18px}.product-form-section{margin-bottom:20px;padding-bottom:20px}.product-registration .form-grid{grid-template-columns:1fr}}
+
 .restock-actions{display:flex;align-items:center;gap:10px;flex-shrink:0}.restock-actions button{min-height:44px}.bar-label>span{min-width:0;overflow-wrap:anywhere}@media(max-width:380px){.bar-label:has(.restock-actions){flex-wrap:wrap}.restock-actions{width:100%;justify-content:space-between}}

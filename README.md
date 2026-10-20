@@ -161,3 +161,9 @@ Seleções de produto, categoria, pagamento e data usam controles próprios da A
 A migração 009 substitui a antiga restrição de exclusão: Excluir produto pede confirmação e registra deleted_at, retirando o cadastro de Produtos, estoque disponível e catálogo. Movimentações e indicadores históricos permanecem. O código pode ser reutilizado em um novo cadastro, com outro ID e estoque independente. Compras, vendas, edições e reativação do produto removido são rejeitadas pelo banco; repetir o mesmo pedido de exclusão é idempotente. A operação usa o proprietário autenticado e a trava por conta.
 
 Cancelar uma venda antiga de produto excluído mantém o produto fora do estoque disponível e não credita o saldo a um novo produto com o mesmo código. O modal informa essa condição. Exclusão não estorna pagamentos nem apaga o histórico financeiro. Não há restauração pela interface; os registros técnicos permanecem no banco. Nenhum produto real foi excluído durante a validação.
+
+## Cadastro guiado de bebidas
+
+O formulário reúne três seções: bebida, forma da compra e preços de venda. Escolher Por caixa revela quantidade de caixas, unidades por caixa e custo pago por caixa. O resumo calcula saldo total e custo por unidade imediatamente; o comando existente recebe o custo convertido e a quantidade de caixas, sem dupla conversão do saldo. Por unidade oculta e desabilita campos de caixa. Marca, código, nome da embalagem e alerta mínimo ficam em Mais informações.
+
+Na edição não há entrada de estoque; o custo continua sendo informado por unidade, preservando a precisão do custo médio existente. Os preços de caixa e unidade continuam independentes. Alterações de saldo devem usar Repor estoque.
