@@ -15,7 +15,7 @@ test('interface sends commands and reuses request ID after connection failure', 
   let hold = false;
   let finish;
   const context = vm.createContext({
-    Intl, Date, JSON, Number, String, Array, Object, Set, Math, Error, crypto: webcrypto,
+    AbortSignal, Intl, Date, JSON, Number, String, Array, Object, Set, Math, Error, navigator:{onLine:true}, crypto: webcrypto,
     document: { body: { classList: { add() {}, remove() {} } }, querySelector: el, querySelectorAll: () => [] }, location: { hash: '' },
     window: { addEventListener() {} }, setTimeout: () => 1, clearTimeout() {},
     fetch: async (url, options) => {

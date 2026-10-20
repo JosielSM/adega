@@ -12,8 +12,9 @@ const accountChannel=typeof BroadcastChannel==='function'?new BroadcastChannel('
 function invalidateAccount(message='Sua sessão mudou em outra aba. Entre novamente.'){sessionGeneration++;authenticated=false;db={products:[],movements:[]};document.querySelector('#modal').close();login(message);}
 if(accountChannel)accountChannel.onmessage=()=>invalidateAccount();
 async function api(path, data) {
+  if(navigator.onLine===false)throw Error('Você está offline. Reconecte à internet para continuar.');
   const generation=sessionGeneration;
-  const response=await fetch('/api/'+path,{method:data?'POST':'GET',headers:data?{'Content-Type':'application/json'}:{},credentials:'same-origin',body:data?JSON.stringify(data):undefined});
+  const response=await fetch('/api/'+path,{method:data?'POST':'GET',headers:data?{'Content-Type':'application/json'}:{},credentials:'same-origin',signal:AbortSignal.timeout(20000),body:data?JSON.stringify(data):undefined});
   const result=await response.json();
   if(generation!==sessionGeneration)throw Error('Sessão alterada. Atualize a página e entre novamente.');
   if(!response.ok){

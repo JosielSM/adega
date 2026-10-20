@@ -17,9 +17,10 @@
   });
   document.querySelector('#close-install-help').onclick = () => help.close();
   const status = document.querySelector('#connection-status');
-  const connection = () => { status.hidden = navigator.onLine; };
-  window.addEventListener('online', connection);
+  const connection = () => { status.hidden = navigator.onLine !== false; if(!status.hidden)status.textContent='Você está offline. Os dados podem estar desatualizados. Reconecte para salvar.'; };
+  window.addEventListener('online', () => {status.hidden=false;status.textContent='Conexão restabelecida. Sincronizando dados…';if(document.body.classList.contains('auth-mode'))connection();});
   window.addEventListener('offline', connection);
+  window.addEventListener('adega-connection',event=>{const state=event.detail;status.hidden=state==='online';status.textContent=state==='offline'?'Você está offline. Os dados podem estar desatualizados. Reconecte para salvar.':'Não foi possível acessar o banco. Os dados podem estar desatualizados. Tentando reconectar…';});
   connection(); update();
   if ('serviceWorker' in navigator) window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch(() => { /* Site remains usable without installation. */ });
