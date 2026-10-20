@@ -19,6 +19,7 @@
   document.addEventListener('keydown', event => {
     if (event.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {close(); toggle.focus();}
   });
+  document.querySelector('#nav-catalog').onclick=()=>{close();document.querySelector('#open-catalog-settings').click();};
   window.addEventListener('hashchange', close);
   const bottom = document.querySelector('#bottom-navigation');
   const updateBottom = () => {
