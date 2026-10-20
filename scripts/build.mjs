@@ -17,3 +17,4 @@ await copyFile('sync.js', 'dist/sync.js');
 for (const file of ['catalog.html','catalog.css','catalog.js','catalog-settings.js']) await copyFile(file, 'dist/' + file);
 await copyFile('cart.js', 'dist/cart.js');
 await copyFile('no-zoom.js', 'dist/no-zoom.js');
+for (const file of ['controls.js','controls.css']) await copyFile(file, 'dist/' + file);

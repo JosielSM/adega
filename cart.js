@@ -13,5 +13,21 @@ export function reconcileCart(cart,products) {
     if(!current){cart.delete(id);changed=true;}
     else {if(Number(current.price)!==Number(item.price))changed=true;cart.set(id,{...current,quantity:item.quantity});}
   }
+  const used=new Map();
+  for(const [id,item] of cart){
+    if(item.stockUnits==null)continue;
+    const key=item.productId||item.id,factor=item.units||1;
+    const count=Math.min(item.quantity,Math.max(0,Math.floor((item.stockUnits-(used.get(key)||0))/factor)));
+    if(count!==item.quantity)changed=true;
+    if(!count)cart.delete(id);else{cart.set(id,{...item,quantity:count});used.set(key,(used.get(key)||0)+count*factor);}
+  }
   return changed;
+}
+export function catalogVariants(products){
+ return products.flatMap(p=>{
+  const common={...p,productId:p.id,stockUnits:p.availableUnits};
+  const variants=[{...common,id:p.id+':unit',name:p.name+' · Unidade',units:1}];
+  if(p.packSize>1&&p.packPrice>0&&p.availablePacks>0)variants.push({...common,id:p.id+':pack',name:p.name+' · '+(p.packName||'Caixa')+' com '+p.packSize+' un.',price:p.packPrice,units:p.packSize});
+  return variants;
+ });
 }

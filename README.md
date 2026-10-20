@@ -13,7 +13,7 @@ As funções SQL validam as operações e calculam estoque e custo médio dentro
 ## Preparar o Supabase
 
 1. Crie um projeto chamado **Adega**.
-2. Execute `supabase/migrations/001_adega.sql` e depois `supabase/migrations/002_account_isolation.sql` no SQL Editor, uma vez cada. A migração cria tabelas, índices, RLS e funções. Use um projeto novo ou confira conflitos de nomes antes da aplicação.
+2. Execute as migrações de `supabase/migrations/001_adega.sql` até `008_packaging.sql`, em ordem, uma vez cada, no SQL Editor. A migração cria tabelas, índices, RLS e funções. Use um projeto novo ou confira conflitos de nomes antes da aplicação.
 3. Em Authentication, habilite cadastro público; no estado atual, a confirmação de e-mail está desativada temporariamente por decisão do proprietário e mantenha login anônimo desabilitado. Configure senha mínima de 8 caracteres, com letras maiúsculas, minúsculas, número e símbolo. Contas existentes continuam disponíveis.
 4. Copie a URL e a chave **publishable** (ou a chave legada **anon**). Não use `service_role`, secret key ou senha do Postgres.
 
@@ -124,13 +124,13 @@ Em até 700 px, produtos usam resumo expansível com nome, preço, saldo e statu
 
 ## Catálogo público por adega
 
-Execute a migração 004_public_catalog.sql uma vez. No perfil, Catálogo para clientes permite publicar e gerar link próprio, copiar, compartilhar e desativar. Nenhum catálogo é ativado automaticamente. Nome, logo, produtos ativos com saldo positivo, marca, categoria e preço de venda ficam públicos somente após publicação. Custos, saldo numérico, histórico, e-mail e IDs de proprietário não são retornados pela função pública. Configurações têm RLS e exigem a conta autenticada. O link usa UUID independente e mantém o mesmo endereço ao reativar.
+Execute a migração 004_public_catalog.sql uma vez. No perfil, Catálogo para clientes permite publicar e gerar link próprio, copiar, compartilhar e desativar. Nenhum catálogo é ativado automaticamente. Nome, logo, produtos ativos com saldo positivo, marca, categoria e preço de venda ficam públicos somente após publicação. A disponibilidade em unidades e embalagens completas permite validar o carrinho público. Custos, histórico, e-mail e IDs de proprietário não são retornados pela função pública. Configurações têm RLS e exigem a conta autenticada. O link usa UUID independente e mantém o mesmo endereço ao reativar.
 
-A página catalog.html funciona sem login, tem busca/categorias e consulta novamente os dados a cada 30 segundos enquanto visível. Desativar bloqueia novas consultas; cópias já vistas ou salvas por clientes não podem ser recolhidas. O catálogo permite consulta, sem carrinho, pedidos ou baixa automática de estoque.
+A página catalog.html funciona sem login, tem busca/categorias e consulta novamente os dados a cada 30 segundos enquanto visível. Desativar bloqueia novas consultas; cópias já vistas ou salvas por clientes não podem ser recolhidas. O catálogo permite consulta e carrinho para pedidos pelo WhatsApp, sem baixa automática de estoque.
 
 ## Carrinho e pedido por WhatsApp
 
-Execute a migração 005_catalog_whatsapp.sql uma vez. Em Perfil > Catálogo para clientes, salve o WhatsApp brasileiro com DDD; o número fica público quando o catálogo é publicado. Sem número configurado, compras pelo catálogo ficam indisponíveis. O cliente adiciona itens ao carrinho em memória, ajusta quantidades (1 a 99), remove, inclui observações e finaliza pelo WhatsApp. O navegador abre uma mensagem para o número da adega; o cliente confirma o envio no WhatsApp.
+Execute a migração 005_catalog_whatsapp.sql uma vez. Em Perfil > Catálogo para clientes, salve o WhatsApp brasileiro com DDD; o número fica público quando o catálogo é publicado. Sem número configurado, compras pelo catálogo ficam indisponíveis. O cliente adiciona itens ao carrinho em memória, ajusta quantidades (1 a 99), remove, informa bairro, rua e número de entrega e finaliza pelo WhatsApp. O navegador abre uma mensagem para o número da adega; o cliente confirma o envio no WhatsApp.
 
 Antes de continuar, o catálogo é consultado novamente. Produtos indisponíveis são removidos e mudanças de preço pedem nova conferência. Total é estimado; disponibilidade, entrega e pagamento são confirmados pela adega. Abrir ou enviar a mensagem não registra venda, cobra pagamento ou baixa estoque. O carrinho não é salvo após recarregar/fechar a página.
 
@@ -143,3 +143,15 @@ Migração 006_delete_product.sql: exclusão autenticada, somente do próprio pr
 Execute a migração 007_cancel_sale.sql uma vez. Em Movimentações ou nas movimentações recentes, Cancelar venda pede confirmação, devolve a quantidade ao estoque e retira o valor da receita, lucro, gráficos e ranking. O registro permanece com cancelledAt e status cancelado, inclusive no CSV. Reposição usa o custo histórico da venda ponderado com o estoque atual, sem alterar outras vendas. O cancelamento é integral e não estorna pagamentos. O operador deve confirmar que as bebidas permanecem ou retornaram à adega.
 
 A operação valida proprietário e tipo, usa a mesma trava por conta e idempotência dos comandos de estoque, rejeita segundo cancelamento e bloqueia compras/estoque inicial. Testes em Postgres embarcado verificaram reposição após compra com custo diferente, idempotência, isolamento e permissões anônimas. Nenhuma venda real foi cancelada durante a implementação.
+
+## Caixas, fardos e unidades
+
+A migração 008 mantém o saldo em unidades como fonte única. No produto, configure unidades por embalagem, nome (Caixa, Fardo, Pacote etc.) e preço da embalagem completa, independente do preço por unidade. Produtos antigos continuam com embalagem de uma unidade; não há conversão automática dos seus saldos existentes. Estoque inicial pode ser informado em unidades ou embalagens; o custo de cadastro é sempre por unidade. Reposição e venda permitem escolher a apresentação e informar quantidade e preço daquela apresentação.
+
+Com 24 unidades e caixa de 12, aparecem 2 caixas + 0 avulsas; vender uma unidade deixa 1 caixa + 11 avulsas. Repor 3 caixas acrescenta 36 unidades. O modelo considera possível formar caixas completas a partir do saldo, sem controlar lacres físicos. Não crie outro produto para a caixa da mesma bebida.
+
+O catálogo oferece unidade e embalagem como opções de compra, com seus preços próprios. A embalagem só aparece quando tem preço e há unidades suficientes para completá-la. As duas opções dividem o mesmo saldo no carrinho; uma consulta antes do WhatsApp confere preços e disponibilidade novamente. Pedidos por WhatsApp não reservam estoque e precisam ser registrados como vendas pelo proprietário.
+
+O histórico guarda quantidade de embalagens, unidades por embalagem, nome e total pago na operação. Alterar a embalagem depois não muda vendas anteriores. Custo médio usa o valor total da reposição dividido pelas unidades recebidas; totais financeiros não dependem do arredondamento do preço convertido por unidade. Cancelar venda devolve as unidades originais. Testes cobrem embalagens de 12 e 6, vendas avulsas, reposição, preços distintos, cancelamento, repetição idempotente, isolamento e carrinho misto.
+
+Seleções de produto, categoria, pagamento e data usam controles próprios da Adega, com busca, teclado e fundo desfocado. Os controles originais permanecem como valores do formulário, sem exibir seletores nativos.

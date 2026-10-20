@@ -1,4 +1,4 @@
-import {orderMessage,reconcileCart} from './cart.js';
+import {orderMessage,reconcileCart,catalogVariants} from './cart.js';
 let products=[],storeName='',whatsapp='',available=false;
 const cart=new Map();
 const status=document.querySelector('#catalog-status'),retry=document.querySelector('#catalog-retry');
@@ -6,12 +6,12 @@ const search=document.querySelector('#catalog-search'),category=document.querySe
 const dialog=document.querySelector('#cart-dialog'),feedback=document.querySelector('#cart-feedback');
 const money=n=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
 function node(tag,text,cls=''){const element=document.createElement(tag);element.textContent=text;element.className=cls;return element;}
-function change(product,delta){const quantity=(cart.get(product.id)?.quantity||0)+delta;if(quantity<=0)cart.delete(product.id);else cart.set(product.id,{...product,quantity:Math.min(quantity,99)});feedback.textContent='';renderCart();}
+function change(product,delta){const quantity=(cart.get(product.id)?.quantity||0)+delta;const used=[...cart.values()].filter(item=>item.id!==product.id&&item.productId===product.productId).reduce((n,item)=>n+item.quantity*(item.units||1),0);const max=product.stockUnits==null?99:Math.floor((product.stockUnits-used)/(product.units||1));if(quantity>max){feedback.textContent='Quantidade indisponível. Unidades e caixas usam o mesmo estoque.';status.textContent=feedback.textContent;return false;}if(quantity<=0)cart.delete(product.id);else cart.set(product.id,{...product,quantity:Math.min(quantity,99)});feedback.textContent='';renderCart();return true;}
 function renderCart(){
  const root=document.querySelector('#cart-items');root.replaceChildren();let total=0,count=0;
  for(const item of cart.values()){
   total+=Math.round(item.price*100)*item.quantity;count+=item.quantity;
-  const row=node('div','','cart-item');const info=node('div','');info.append(node('strong',item.name),node('p',money(item.price)+' por unidade','note'));row.append(info);
+  const row=node('div','','cart-item');const info=node('div','');info.append(node('strong',item.name),node('p',money(item.price)+(item.units>1?' por embalagem':' por unidade'),'note'));row.append(info);
   const controls=node('div','','quantity');
   for(const [label,text,delta] of [['Diminuir quantidade de ','−',-1],['Aumentar quantidade de ','+',1]]){const button=node('button',text);button.type='button';button.setAttribute('aria-label',label+item.name);button.onclick=()=>change(item,delta);if(delta===1)button.disabled=item.quantity>=99;controls.append(button);if(delta===-1)controls.append(node('span',String(item.quantity)));}
   const remove=node('button','Remover','remove-item');remove.onclick=()=>{cart.delete(item.id);renderCart();};remove.setAttribute('aria-label','Remover '+item.name);row.append(controls,remove);root.append(row);
@@ -27,13 +27,13 @@ function render(){
  const list=products.filter(p=>(p.name+' '+p.brand).toLocaleLowerCase('pt-BR').includes(search.value.toLocaleLowerCase('pt-BR'))&&(!category.value||p.category===category.value));
  const root=document.querySelector('#catalog-products');root.replaceChildren();
  for(const p of list){const card=node('article','','beverage');for(const [tag,cls,text] of [['span','category',p.category],['h2','',p.name],['p','brand',p.brand],['p','price',money(p.price)]])card.append(node(tag,text,cls));
- const add=node('button','Adicionar ao carrinho','add-cart');add.disabled=!whatsapp;add.onclick=()=>{change(p,1);status.textContent=p.name+' adicionado ao carrinho.';};card.append(add);root.append(card);}
+ const add=node('button','Adicionar ao carrinho','add-cart');add.disabled=!whatsapp;add.onclick=()=>{if(change(p,1))status.textContent=p.name+' adicionado ao carrinho.';};card.append(add);root.append(card);}
  status.textContent=list.length?`${list.length} bebidas disponíveis${whatsapp?'':' · Pedidos pelo WhatsApp ainda não configurados.'}`:products.length?'Nenhuma bebida encontrada. Ajuste os filtros.':'Nenhum produto disponível no momento.';
 }
 async function load(){
  retry.hidden=true;
  try{const response=await fetch('/api/catalog?loja='+encodeURIComponent(new URLSearchParams(location.search).get('loja')||''),{credentials:'omit',cache:'no-store'});const result=await response.json();if(!response.ok)throw Error(result.error||'Catálogo indisponível.');
- available=true;storeName=result.name;whatsapp=result.whatsapp||'';products=result.products;
+ available=true;storeName=result.name;whatsapp=result.whatsapp||'';products=catalogVariants(result.products);
  const changed=reconcileCart(cart,products);if(changed)feedback.textContent='O catálogo mudou. Confira os itens e valores antes de continuar.';
  document.querySelector('.brand-scene').hidden=false;window.dispatchEvent(new Event('catalog-ready'));
  document.title=result.name+' · Catálogo';document.querySelector('#store-name').textContent=result.name;

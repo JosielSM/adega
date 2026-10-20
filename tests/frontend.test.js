@@ -42,4 +42,13 @@ test('interface sends commands and reuses request ID after connection failure', 
   finish(Response.json({products:[{id:'previous-account-product'}],movements:[]}));
   assert.equal(await stale,false);
   assert.equal(vm.runInContext('db.products.length',context),0,'response from prior account must never replace current data');
+  el('#transaction-form').elements={mode:{value:'unit',querySelector:()=>({disabled:false})},quantity:{value:'3'}};
+  vm.runInContext("db.products=[{id:'pack-product',name:'Bebida',active:true,stock:24,pack_size:6,cost:6.666667,price:8,pack_price:40}];transaction('purchase')",context);
+  el('#transaction-product').value='pack-product';el('#transaction-product').onchange();
+  assert.equal(el('#unit-price').value,6.67,'suggested unit cost must fit the cent precision of the form');
+  el('#transaction-form').elements.mode.value='pack';el('#transaction-form').elements.mode.onchange();
+  assert.equal(el('#unit-price').value,40,'a repeating unit cost must not produce an invalid fractional cent package price');
+  assert.match(el('#transaction-stock').textContent,/18 unidades/);
+  assert.match(el('#transaction-total').textContent,/120,00/);
+  assert.doesNotMatch(vm.runInContext("stockBreakdown({stock:24,pack_size:12,pack_name:'<img src=x>'})",context),/<img/);
 });
