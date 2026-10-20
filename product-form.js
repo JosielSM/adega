@@ -6,7 +6,9 @@ function productPurchaseSummary(mode,quantity,size,cost){
 function productModal(id){
  const p=db.products.find(product=>product.id===id)||{name:'',brand:'',code:'',category:'Cervejas',min:5};
  const editing=!!id,packed=Number(p.pack_size)>1;
- const packNames=['Caixa','Grade','Fardo','Pack'];if(p.pack_name&&!packNames.includes(p.pack_name))packNames.push(p.pack_name);
+ const packNames=['Caixa','Grade','Fardo','Pack'];
+ const selectedPack=packNames.find(name=>name.toLocaleLowerCase('pt-BR')===(p.pack_name||'Caixa').toLocaleLowerCase('pt-BR'))||p.pack_name||'Caixa';
+ if(!packNames.includes(selectedPack))packNames.push(selectedPack);
  const modal=document.querySelector('#modal'),form=document.querySelector('#modal-form'),fields=document.querySelector('#modal-fields');
  document.querySelector('#modal-title').textContent=editing?'Editar produto':'Cadastrar bebida';
  form.querySelector('button[type=submit]').textContent=editing?'Salvar alterações':'Cadastrar produto';
@@ -21,7 +23,7 @@ function productModal(id){
     <label><input type="radio" name="purchase_mode" value="unit" ${!packed?'checked':''}><span><strong>Por unidade</strong><small>Bebidas avulsas</small></span></label>
     <label><input type="radio" name="purchase_mode" value="pack" ${packed?'checked':''}><span><strong>Por embalagem</strong><small>Caixa, grade, fardo ou pack</small></span></label>
    </fieldset>
-   <label id="product-box-name">Tipo de embalagem<select name="pack_name">${packNames.map(name=>`<option value="${esc(name)}" ${name===(p.pack_name||'Caixa')?'selected':''}>${esc(name)}</option>`).join('')}</select></label>
+   <label id="product-box-name">Tipo de embalagem<select name="pack_name">${packNames.map(name=>`<option value="${esc(name)}" ${name===selectedPack?'selected':''}>${esc(name)}</option>`).join('')}</select></label>
    <div class="form-grid product-purchase-fields">
     ${!editing?`<label><span id="product-quantity-label">Quantas unidades comprou? *</span><input name="stock" type="number" value="0" min="0" step="1" required inputmode="numeric"><small>Use 0 para cadastrar sem estoque.</small></label>`:''}
     <label id="product-box-size"><span id="product-size-label">Quantas unidades vêm em cada caixa? *</span><input name="pack_size" type="number" value="${packed?p.pack_size:12}" min="2" max="10000" step="1" required inputmode="numeric"></label>
