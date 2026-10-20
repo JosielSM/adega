@@ -130,7 +130,7 @@ A página catalog.html funciona sem login, tem busca/categorias e consulta novam
 
 ## Carrinho e pedido por WhatsApp
 
-Execute a migração 005_catalog_whatsapp.sql uma vez. Em Perfil > Catálogo para clientes, salve o WhatsApp brasileiro com DDD; o número fica público quando o catálogo é publicado. Sem número configurado, compras pelo catálogo ficam indisponíveis. O cliente adiciona itens ao carrinho em memória, ajusta quantidades (1 a 99), remove, informa bairro, rua e número de entrega e finaliza pelo WhatsApp. O navegador abre uma mensagem para o número da adega; o cliente confirma o envio no WhatsApp.
+Execute a migração 005_catalog_whatsapp.sql uma vez. Em Perfil > Catálogo para clientes, salve o WhatsApp brasileiro com DDD; o número fica público quando o catálogo é publicado. Sem número configurado, compras pelo catálogo ficam indisponíveis. O cliente adiciona itens ao carrinho em memória, ajusta quantidades até o saldo disponível, remove, informa bairro, rua e número de entrega e finaliza pelo WhatsApp. O navegador abre uma mensagem para o número da adega; o cliente confirma o envio no WhatsApp.
 
 Antes de continuar, o catálogo é consultado novamente. Produtos indisponíveis são removidos e mudanças de preço pedem nova conferência. Total é estimado; disponibilidade, entrega e pagamento são confirmados pela adega. Abrir ou enviar a mensagem não registra venda, cobra pagamento ou baixa estoque. O carrinho não é salvo após recarregar/fechar a página.
 
@@ -173,3 +173,7 @@ O tipo de embalagem fica visível na seção da compra: Caixa, Grade, Fardo ou P
 ## Máscaras e valores de entrada
 
 Novos cadastros iniciam estoque, tamanho da embalagem e alerta mínimo sem números pré-preenchidos. Exemplos são placeholders. Quantidade em novas vendas e reposições também começa vazia. Valores monetários usam uma entrada visual em reais, com vírgula e duas casas, mantendo o controle numérico original como única fonte do FormData e dos cálculos. Valores salvos e preços do produto selecionado continuam disponíveis; o custo médio de edição mantém a precisão armazenada até uma alteração explícita.
+
+## Escolha de quantidade no catálogo
+
+Adicionar ao carrinho abre um diálogo com campo numérico vazio, botões de aumentar/diminuir, disponibilidade e subtotal. Antes de adicionar a quantidade escolhida, o catálogo é consultado novamente; mudanças de preço ou carrinho pedem nova conferência. Dentro do carrinho, a quantidade pode ser digitada diretamente ou ajustada pelos botões. O limite fixo de 99 foi removido; quantidades inteiras respeitam o estoque compartilhado entre unidades e embalagens. Pedidos continuam sem reserva ou baixa automática, com conferência adicional antes de abrir o WhatsApp.

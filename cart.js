@@ -31,3 +31,12 @@ export function catalogVariants(products){
   return variants;
  });
 }
+export function cartCapacity(cart,product){
+ const used=[...cart.values()].filter(item=>item.id!==product.id&&(item.productId||item.id)===(product.productId||product.id)).reduce((n,item)=>n+item.quantity*(item.units||1),0);
+ return Math.max(0,Math.floor(((product.stockUnits??2147483647)-used)/(product.units||1)));
+}
+export function setCartQuantity(cart,product,quantity){
+ if(!Number.isSafeInteger(quantity)||quantity<0||quantity>cartCapacity(cart,product))return false;
+ if(!quantity)cart.delete(product.id);else cart.set(product.id,{...product,quantity});
+ return true;
+}
