@@ -266,3 +266,5 @@ main>section#content{min-height:calc(100svh - 158px)}
 #navigation>#nav-catalog{display:flex;align-items:center;gap:13px;width:100%;min-height:44px;padding:14px 12px;border:0;border-radius:8px;background:transparent;color:inherit;text-align:left;font-size:17px;font-weight:400}#navigation>#nav-catalog span{font-size:13px}#navigation>#nav-catalog:hover{background:#ffffff0b;color:#fff}@media(max-width:700px){#navigation>#nav-catalog{min-height:48px;padding:14px}#navigation>#nav-catalog span{font-size:14px}}
 
 body:has(#connection-status:not([hidden])){--connection-offset:62px}#connection-status{z-index:40;padding-top:max(12px,env(safe-area-inset-top))}@media(max-width:700px){body:has(#connection-status:not([hidden]))>aside{top:var(--connection-offset)}body:has(#connection-status:not([hidden])) #account-tools{top:calc(16px + env(safe-area-inset-top) + var(--connection-offset))}body:not(.auth-mode):has(#connection-status:not([hidden])){padding-top:calc(78px + env(safe-area-inset-top) + var(--connection-offset))}}
+
+html{touch-action:pan-x pan-y}

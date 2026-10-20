@@ -24,3 +24,5 @@ main{padding-top:0}
 .scene-image{object-position:center 55%;transform:translate3d(0,var(--parallax-shift,0px),0) scale(1.28)}
 @media(max-width:700px){main>.brand-scene{height:260px;margin-bottom:24px}.scene-copy{padding:48px 24px}.scene-copy h2{font-size:30px}.scene-image{object-position:65% center}}
 @media(prefers-reduced-motion:reduce){.scene-image{transform:scale(1.28)}}
+
+html{touch-action:pan-x pan-y}
