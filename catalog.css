@@ -27,5 +27,17 @@ main{padding-top:0}
 
 html{touch-action:pan-x pan-y}
 .beverage-photo{width:100%;height:190px;display:block;object-fit:contain;background:#fff;border-radius:8px;margin-bottom:16px}@media(max-width:700px){.beverage-photo{height:145px;margin-bottom:12px}}
+/* Uniform product cards, including products without a photo. */
+#catalog-products{grid-auto-rows:1fr;align-items:stretch}
+.beverage{display:flex;flex-direction:column;min-width:0;height:100%}
+.beverage-media{display:flex;align-items:center;justify-content:center;width:100%;height:190px;flex-shrink:0;margin-bottom:16px;border-radius:8px;overflow:hidden;background:#f4f6f8}
+.beverage-media .beverage-photo{width:100%;height:100%;margin:0;border-radius:0;object-fit:contain}
+.beverage-no-photo{font-size:12px;color:#81909b}
+.beverage>.category{height:16px;line-height:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0}
+.beverage>h2{height:3.9em;line-height:1.3;flex-shrink:0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin:10px 0 6px}
+.beverage>.brand{height:18px;min-height:18px;line-height:18px;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0}
+.beverage>.price{min-height:32px;line-height:32px;margin:14px 0 16px}
+.beverage>.add-cart{height:56px;min-height:56px;flex-shrink:0;margin-top:auto;padding:10px 8px;line-height:1.3}
+@media(max-width:700px){.beverage-media{height:145px;margin-bottom:12px}.beverage>h2{font-size:16px}}
 .delivery-payment{display:block;margin-top:22px;font-weight:600}.delivery-payment select{margin-top:8px}
 .quantity input{width:78px;min-height:44px;margin:0;text-align:center;padding:9px 4px}.quantity-editor{margin-top:12px;justify-content:center;gap:14px}.quantity-editor input{width:110px;font-size:21px;min-height:52px}.quantity-editor button{min-width:48px;min-height:48px}#quantity-product{font-weight:650;overflow-wrap:anywhere}#quantity-price{margin:8px 0 22px}#quantity-subtotal{font-size:22px;font-weight:700;color:#186182}#quantity-error{font-size:13px;line-height:1.6;color:#a74d3c}#confirm-quantity{width:100%;min-height:48px}#close-quantity{background:#eef3f6;color:#223344;font-size:24px;min-width:44px;padding:5px}.quantity input:focus-visible{outline:2px solid #186182;outline-offset:2px}@media(max-width:420px){.cart-item .quantity{gap:6px}.cart-item .quantity input{width:68px}}
