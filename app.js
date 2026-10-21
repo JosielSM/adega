@@ -61,7 +61,17 @@ function stockBreakdown(p){const size=p.pack_size||1;return size>1?Math.floor(p.
 function movementTotal(m){return m.lineTotal??m.quantity*m.price;}
 function movementQuantity(m){return m.packUnits>1?m.packCount+' '+esc(m.packLabel)+'(s) · '+m.quantity+' un.':m.quantity+' un.';}
 function stock(p){return p.stock===0?'<span class="pill out">Sem estoque</span>':p.stock<=p.min?'<span class="pill low">Estoque baixo</span>':'<span class="pill">Disponível</span>'}
-function saleAction(m){return m.type==='sale'?(m.cancelledAt?`<span class="pill out">Venda cancelada</span><small class="cancel-date">${date(m.cancelledAt)}</small>`:`<button class="danger small" data-cancel-sale="${m.id}">Cancelar venda</button>`):''}
+function saleAction(m){return `<div class="actions">${m.type==='sale'?(m.cancelledAt?`<span class="pill out">Venda cancelada</span>`:`<button class="secondary small" data-cancel-sale="${m.id}">Cancelar venda</button>`):''}<button class="danger small" data-delete-movement="${m.id}">Excluir movimentação</button></div>`}
+function deleteMovementModal(id){
+ const movement=db.movements.find(m=>m.id===id);if(!movement)return;
+ const modal=document.querySelector('#modal');document.querySelector('#modal-title').textContent='Excluir movimentação?';
+ const effect=movement.cancelledAt?'Esta venda já foi cancelada. O estoque não será alterado novamente.':movement.type==='sale'?'As unidades voltarão ao estoque e esta venda sairá dos relatórios de receita e lucro.':'As unidades desta entrada serão retiradas do estoque e o custo será ajustado. Se houver movimentações posteriores dependentes desta entrada, a exclusão será bloqueada.';
+ document.querySelector('#modal-fields').innerHTML=`<p><strong>${esc(movement.name)}</strong> · ${movementQuantity(movement)} · ${money(movementTotal(movement))}</p><p>${effect}</p><p>O registro sairá do histórico exibido. Esta ação não estorna pagamentos.</p>`;
+ document.querySelector('#form-error').textContent='';document.querySelector('#modal-form button[type=submit]').textContent='Excluir movimentação';
+ document.querySelector('#modal-form').onsubmit=async event=>{event.preventDefault();if(await saveCommand('delete_movement',{id},event.target)){modal.close();render();toast('Movimentação excluída. Estoque e relatórios atualizados.');}};
+ modal.showModal();document.querySelector('#cancel-modal').focus();
+}
+content.addEventListener?.('click',event=>{const button=event.target.closest('[data-delete-movement]');if(button&&authenticated)deleteMovementModal(button.dataset.deleteMovement);});
 function cancelSaleModal(id){
  const sale=db.movements.find(m=>m.id===id&&m.type==='sale'&&!m.cancelledAt);if(!sale)return;
  const modal=document.querySelector('#modal');document.querySelector('#modal-title').textContent='Cancelar venda?';

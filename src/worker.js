@@ -159,9 +159,10 @@ export default {
       }
       if (url.pathname === '/api/command' && request.method === 'POST') {
         const data = await body(request,160*1024);
-        if (!['create_product', 'update_product', 'set_active', 'movement', 'delete_product', 'cancel_sale'].includes(data.action) || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(data.requestId || '') || !data.payload || typeof data.payload !== 'object' || Array.isArray(data.payload)) throw new ApiError(400, 'Operação inválida.');
+        if (!['create_product', 'update_product', 'set_active', 'movement', 'delete_product', 'cancel_sale', 'delete_movement'].includes(data.action) || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(data.requestId || '') || !data.payload || typeof data.payload !== 'object' || Array.isArray(data.payload)) throw new ApiError(400, 'Operação inválida.');
         for(const name of ['unit_image','pack_image'])if(Object.hasOwn(data.payload,name)&&(typeof data.payload[name]!=='string'||data.payload[name].length>65536||(data.payload[name]&&!/^data:image\/jpeg;base64,\/9j\/[A-Za-z0-9+/]*={0,2}$/.test(data.payload[name]))))throw new ApiError(400,'Imagem inválida. Selecione novamente a foto do produto.');
         if(data.action==='cancel_sale')return json(await supabase(env,'/rest/v1/rpc/adega_cancel_sale',token,{p_id:data.payload.id,p_request_id:data.requestId}));
+        if(data.action==='delete_movement')return json(await supabase(env,'/rest/v1/rpc/adega_delete_movement',token,{p_id:data.payload.id,p_request_id:data.requestId}));
         if(data.action==='delete_product')return json(await supabase(env,'/rest/v1/rpc/adega_delete_product',token,{p_id:data.payload.id,p_request_id:data.requestId}));
         return json(await supabase(env, '/rest/v1/rpc/adega_command', token, { p_action: data.action, p_payload: data.payload, p_request_id: data.requestId }));
       }

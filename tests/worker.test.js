@@ -112,6 +112,16 @@ test('cancel sale forwards current account token and idempotency to dedicated RP
  assert.equal(response.status,200);
 });
 
+test('movement deletion uses the current account token and ignores injected ownership',async t=>{
+ t.mock.method(globalThis,'fetch',async(url,options)=>{
+  assert.match(url,/rpc\/adega_delete_movement$/);assert.equal(options.headers.Authorization,'Bearer account-a');
+  assert.deepEqual(JSON.parse(options.body),{p_id:'movement-id',p_request_id:'12345678-1234-1234-1234-123456789012'});
+  return Response.json({products:[],movements:[]});
+ });
+ const response=await worker.fetch(post('command',{action:'delete_movement',payload:{id:'movement-id',owner_id:'other'},requestId:'12345678-1234-1234-1234-123456789012'},{cookie:'adega_session=account-a'}),env);
+ assert.equal(response.status,200);
+});
+
 test('public checkout rejects excess boxes on the server and uses database prices',async t=>{
  t.mock.method(globalThis,'fetch',async(url,options)=>{
   assert.match(url,/rpc\/adega_public_catalog$/);assert.equal(options.headers.Authorization,undefined);
