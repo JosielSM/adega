@@ -11,7 +11,10 @@ let restockProductId=null;
 let sessionGeneration=0;
 const accountChannel=typeof BroadcastChannel==='function'?new BroadcastChannel('adega-access'):null;
 function invalidateAccount(message='Sua sessão mudou em outra aba. Entre novamente.'){sessionGeneration++;authenticated=false;db={products:[],movements:[]};document.querySelector('#modal').close();login(message);}
-if(accountChannel)accountChannel.onmessage=()=>invalidateAccount();
+if(accountChannel)accountChannel.onmessage=event=>{
+ if(event.data==='signed-in'){sessionGeneration++;authenticated=false;db={products:[],movements:[]};document.querySelector('#modal').close();start();}
+ else invalidateAccount();
+};
 async function api(path, data) {
   if(navigator.onLine===false)throw Error('Você está offline. Reconecte à internet para continuar.');
   const generation=sessionGeneration;
@@ -48,7 +51,7 @@ function login(message=''){
   window.AdegaAuth.show(message);
 }
 async function start(){
-  if(['cadastro','recuperar','redefinir','login'].includes(location.hash.slice(1))){login();return;}
+  if(['cadastro','recuperar','redefinir'].includes(location.hash.slice(1))){login();return;}
   content.innerHTML='';
   try{db=await api('state');authenticated=true;render();}catch(error){login(error.message);}
 }

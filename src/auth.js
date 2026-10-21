@@ -1,3 +1,4 @@
+import {sessionHeaders} from './session.js';
 const POLICY = 'Use pelo menos 8 caracteres, letras maiúsculas e minúsculas, número e símbolo.';
 export function validPassword(password) {
   return typeof password==='string' && password.length>=8 && password.length<=128 && /[a-z]/.test(password) && /[A-Z]/.test(password) && /\d/.test(password) && /[^\w\s]|_/.test(password);
@@ -8,6 +9,7 @@ export async function authRoute(request, env, { supabase, body, json, cookie, se
   const getCookie=name=>request.headers.get('cookie')?.split(';').map(s=>s.trim()).find(s=>s.startsWith(name+'='))?.slice(name.length+1);
   const flowCookie=(name,value,age=600)=>`${name}=${value}; Path=/api; HttpOnly; SameSite=Lax; Max-Age=${age}${url.protocol==='https:'?'; Secure':''}`;
   const headersWithCookies=(...values)=>{const headers=new Headers({'Cache-Control':'no-store','Referrer-Policy':'no-referrer'});values.forEach(value=>headers.append('Set-Cookie',value));return headers;};
+  const recoveryHeaders=auth=>headersWithCookies(flowCookie('adega_recovery',auth.access_token,600),flowCookie('adega_recovery_refresh',auth.refresh_token||'',auth.refresh_token?600:0));
   const redirect=(destination,headers=new Headers({'Cache-Control':'no-store'}))=>{headers.set('Location',new URL(destination,origin).href);return new Response(null,{status:303,headers});};
   const credentials=data=>{
     if(typeof data.email!=='string'||data.email.length>254||!/^\S+@\S+\.\S+$/.test(data.email.trim()))throw new ApiError(400,'Informe um e-mail válido.');
@@ -28,7 +30,7 @@ export async function authRoute(request, env, { supabase, body, json, cookie, se
   if(path==='/api/auth/signup' && request.method==='POST'){
     const data=await body(request), email=credentials(data), secret=password(data), proof=await pkce();
     const auth=await supabase(env,`/auth/v1/signup?redirect_to=${encodeURIComponent(origin+'/api/auth/callback')}`,null,{email,password:secret,code_challenge:proof.challenge,code_challenge_method:'s256'});
-    if(auth.access_token)return json({authenticated:true},200,{'Set-Cookie':cookie(request,auth.access_token,Math.min(auth.expires_in||3600,3600))});
+    if(auth.access_token)return Response.json({authenticated:true},{headers:sessionHeaders(request,auth)});
     const headers=headersWithCookies(flowCookie('adega_pkce',proof.verifier,3600),flowCookie('adega_pkce_kind','signup',3600));
     headers.set('Content-Type','application/json');
     return new Response(JSON.stringify({message:'Cadastro recebido! Abra o link de confirmação do e-mail neste mesmo navegador. Se já tiver conta, use Entrar ou recupere sua senha.'}),{status:200,headers});
@@ -46,8 +48,8 @@ export async function authRoute(request, env, { supabase, body, json, cookie, se
       if(!token || token.length>512 || !['signup','recovery','email'].includes(type))throw new ApiError(400,'Link inválido ou expirado. Solicite um novo link.');
       const auth=await supabase(env,'/auth/v1/verify',null,{token_hash:token,type});
       if(!auth.access_token)throw new ApiError(400,'Não foi possível validar este link.');
-      if(type==='recovery')return redirect('/#redefinir',headersWithCookies(flowCookie('adega_recovery',auth.access_token,600)));
-      return redirect('/#painel',headersWithCookies(cookie(request,auth.access_token,Math.min(auth.expires_in||3600,3600))));
+      if(type==='recovery')return redirect('/#redefinir',recoveryHeaders(auth));
+      return redirect('/#painel',sessionHeaders(request,auth));
     }catch(error){return redirect('/?auth_error='+encodeURIComponent(error.message)+'#recuperar');}
   }
   if(path==='/api/auth/password' && request.method==='POST'){
@@ -55,7 +57,11 @@ export async function authRoute(request, env, { supabase, body, json, cookie, se
     if(!recovery)throw new ApiError(400,'Este link expirou. Solicite novamente a recuperação de senha.');
     const data=await body(request);
     await supabase(env,'/auth/v1/user',recovery,{password:password(data)},'PUT');
-    const headers=headersWithCookies(flowCookie('adega_recovery','',0),cookie(request,recovery,600));
+    const refresh=getCookie('adega_recovery_refresh');
+    const auth=refresh?await supabase(env,'/auth/v1/token?grant_type=refresh_token',null,{refresh_token:refresh}):{access_token:recovery,expires_in:600};
+    const headers=sessionHeaders(request,auth);
+    headers.append('Set-Cookie',flowCookie('adega_recovery','',0));
+    headers.append('Set-Cookie',flowCookie('adega_recovery_refresh','',0));
     headers.set('Content-Type','application/json');
     return new Response(JSON.stringify({authenticated:true}),{status:200,headers});
   }
@@ -77,10 +83,10 @@ export async function authRoute(request, env, { supabase, body, json, cookie, se
       const auth=await supabase(env,'/auth/v1/token?grant_type=pkce',null,{auth_code:code,code_verifier:verifier});
       if(!auth.access_token)throw new ApiError(400,'Não foi possível confirmar sua conta Google.');
       if(getCookie('adega_pkce_kind')==='recovery'){
-        headers.append('Set-Cookie',flowCookie('adega_recovery',auth.access_token,600));
+        recoveryHeaders(auth).getSetCookie().forEach(value=>headers.append('Set-Cookie',value));
         return redirect('/#redefinir',headers);
       }
-      headers.append('Set-Cookie',cookie(request,auth.access_token,Math.min(auth.expires_in||3600,3600)));
+      sessionHeaders(request,auth).getSetCookie().forEach(value=>headers.append('Set-Cookie',value));
       return redirect('/#painel',headers);
     }catch(error){return redirect('/?auth_error='+encodeURIComponent(error.message)+'#login',headers);}
   }

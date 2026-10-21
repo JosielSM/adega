@@ -6,14 +6,14 @@ Sistema de gestão de bebidas em HTML, CSS e JavaScript. Use **Adega** como nome
 
 Navegador → API no Cloudflare Worker → Supabase Data API → Postgres.
 
-O mesmo Worker hospeda a interface com Static Assets e executa a API JavaScript. A Data API acessa o Postgres por HTTPS; não usamos D1 nem conexão TCP direta. Supabase Auth autentica os usuários. O Worker guarda o token em cookie HttpOnly, SameSite e Secure em HTTPS. Nenhuma chave administrativa ou senha do banco vai para o navegador.
+O mesmo Worker hospeda a interface com Static Assets e executa a API JavaScript. A Data API acessa o Postgres por HTTPS; não usamos D1 nem conexão TCP direta. Supabase Auth autentica os usuários. O Worker guarda os tokens de acesso e renovação em cookies HttpOnly, SameSite e Secure em HTTPS. O acesso é renovado no servidor antes de expirar ou após uma rejeição por expiração. O cookie de renovação permanece por um ano e esse prazo é renovado com o uso. Fechar o navegador ou o PWA não encerra a sessão; sair da conta revoga a sessão local no Supabase e apaga os cookies. Sessões antigas precisam de uma nova entrada para obter o cookie de renovação. Limpar os dados do navegador ou revogar a sessão no provedor exige nova autenticação. Nenhuma chave administrativa ou senha do banco vai para o navegador.
 
 As funções SQL validam as operações e calculam estoque e custo médio dentro de transações. Os comandos por conta são serializados, vendas acima do saldo são rejeitadas e um identificador impede duplicações na repetição da mesma requisição. O histórico preserva nome e custo no momento da operação.
 
 ## Preparar o Supabase
 
 1. Crie um projeto chamado **Adega**.
-2. Execute as migrações de `supabase/migrations/001_adega.sql` até `010_product_images.sql`, em ordem, uma vez cada, no SQL Editor. A migração cria tabelas, índices, RLS e funções. Use um projeto novo ou confira conflitos de nomes antes da aplicação.
+2. Execute as migrações de `supabase/migrations/001_adega.sql` até `011_delete_movement.sql`, em ordem, uma vez cada, no SQL Editor. A migração cria tabelas, índices, RLS e funções. Use um projeto novo ou confira conflitos de nomes antes da aplicação.
 3. Em Authentication, habilite cadastro público; no estado atual, a confirmação de e-mail está desativada temporariamente por decisão do proprietário e mantenha login anônimo desabilitado. Configure senha mínima de 8 caracteres, com letras maiúsculas, minúsculas, número e símbolo. Contas existentes continuam disponíveis.
 4. Copie a URL e a chave **publishable** (ou a chave legada **anon**). Não use `service_role`, secret key ou senha do Postgres.
 

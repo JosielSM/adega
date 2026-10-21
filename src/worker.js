@@ -1,5 +1,6 @@
 import { authRoute } from './auth.js';
 import { validateCatalogCart } from './catalog-stock.js';
+import {requestSession,sessionHeaders} from './session.js';
 const COOKIE = 'adega_session';
 const LIMIT = 32 * 1024;
 
@@ -60,6 +61,8 @@ async function supabase(env, path, token, data, method = 'POST') {
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
     if (path.startsWith('/auth/')) {
+      if(response.status>=500)throw new ApiError(502,'O serviço de acesso está indisponível. Tentando reconectar.');
+      if(path.includes('grant_type=refresh_token')&&[400,401,403].includes(response.status))throw new ApiError(401,'Sessão encerrada. Entre novamente.');
       if(response.status===429)throw new ApiError(429,'Muitas tentativas. Aguarde alguns minutos e tente novamente.');
       const messages={signup_disabled:'Novos cadastros estão temporariamente indisponíveis.',email_not_confirmed:'Confirme seu e-mail antes de entrar. Confira sua caixa de entrada.',weak_password:'Sua senha não atende aos requisitos de segurança.',same_password:'Escolha uma senha diferente da senha atual.',otp_expired:'Link inválido ou expirado. Solicite um novo link.',over_email_send_rate_limit:'Aguarde alguns minutos antes de solicitar outro e-mail.',email_address_not_authorized:'O envio de e-mails para novos usuários ainda está sendo configurado.',email_address_invalid:'Informe um e-mail válido.',user_already_exists:'Se você já possui uma conta, entre ou recupere sua senha.'};
       if(messages[error.code])throw new ApiError(400,messages[error.code]);
@@ -75,20 +78,21 @@ async function supabase(env, path, token, data, method = 'POST') {
   return response.status === 204 ? null : response.json();
 }
 
-export default {
-  async fetch(request, env) {
+const router = {
+  async fetch(request, env, currentSession) {
+    const supabase=currentSession.call;
     const url = new URL(request.url);
     if (!url.pathname.startsWith('/api/')) return env.ASSETS.fetch(request);
     try {
       if (!['GET', 'POST'].includes(request.method)) throw new ApiError(405, 'Método não permitido.');
       if (request.method === 'POST' && request.headers.get('origin') !== url.origin) throw new ApiError(403, 'Origem não permitida.');
       if (url.pathname === '/api/logout' && request.method === 'POST') {
-        const token=session(request);
+        const token=await currentSession.token().catch(()=>session(request));
         if(token&&env.SUPABASE_URL&&env.SUPABASE_PUBLISHABLE_KEY){
           try{await supabase(env,'/auth/v1/logout?scope=local',token,{});}catch{ /* Always allow clearing this browser's cookies. */ }
         }
         const headers=new Headers({'Cache-Control':'no-store','Content-Type':'application/json'});
-        for(const name of ['adega_session','adega_recovery','adega_pkce','adega_pkce_kind'])headers.append('Set-Cookie',cookie(request,'',0).replace('adega_session=',name+'='));
+        for(const name of ['adega_session','adega_refresh','adega_recovery','adega_recovery_refresh','adega_pkce','adega_pkce_kind'])headers.append('Set-Cookie',cookie(request,'',0).replace('adega_session=',name+'='));
         return new Response(JSON.stringify({ok:true}),{status:200,headers});
       }
       if (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY) throw new ApiError(503, 'Configure a conexão com o Supabase no Worker.');
@@ -101,7 +105,7 @@ export default {
         const data = await body(request);
         if (typeof data.email !== 'string' || typeof data.password !== 'string' || !data.email.trim() || !data.password || data.email.length > 254 || data.password.length > 1024) throw new ApiError(400, 'Informe e-mail e senha.');
         const auth = await supabase(env, '/auth/v1/token?grant_type=password', null, { email: data.email.trim(), password: data.password });
-        return json({ ok: true }, 200, { 'Set-Cookie': cookie(request, auth.access_token, Math.min(auth.expires_in, 3600)) });
+        return Response.json({ok:true},{headers:sessionHeaders(request,auth)});
       }
       if(url.pathname==='/api/catalog/image'&&request.method==='GET'){
         const slug=url.searchParams.get('loja'),id=url.searchParams.get('id'),mode=url.searchParams.get('mode');
@@ -124,7 +128,7 @@ export default {
         let items;try{items=validateCatalogCart(catalog,data.items);}catch(error){throw new ApiError(409,error.message);}
         return json({items,whatsapp:catalog.whatsapp});
       }
-      const token = session(request);
+      const token = await currentSession.token();
       if (!token) throw new ApiError(401, 'Entre para acessar sua distribuidora.');
       if(url.pathname==='/api/product/image'&&request.method==='GET'){
         const id=url.searchParams.get('id'),mode=url.searchParams.get('mode');
@@ -172,4 +176,11 @@ export default {
       return json({ error: error instanceof ApiError ? error.message : 'Falha de conexão. Tente novamente.' }, error.status || 502);
     }
   }
+};
+export default {
+ async fetch(request,env){
+  const currentSession=requestSession(request,env,supabase,ApiError);
+  const response=await router.fetch(request,env,currentSession);
+  return new URL(request.url).pathname==='/api/logout'?response:currentSession.apply(response);
+ }
 };
