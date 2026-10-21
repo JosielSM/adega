@@ -11,6 +11,12 @@ function json(data, status = 200, headers = {}) {
   return Response.json(data, { status, headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', ...headers } });
 }
 
+function productImage(data){
+ if(typeof data!=='string'||data.length>65536||!/^data:image\/jpeg;base64,\/9j\/[A-Za-z0-9+/]*={0,2}$/.test(data))throw new ApiError(404,'Imagem indisponível.');
+ let bytes;try{bytes=Uint8Array.from(atob(data.split(',')[1]),c=>c.charCodeAt(0));}catch{throw new ApiError(404,'Imagem indisponível.');}
+ return new Response(bytes,{headers:{'Content-Type':'image/jpeg','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'none'"}});
+}
+
 async function body(request, limit = LIMIT) {
   if (!request.headers.get('content-type')?.startsWith('application/json')) throw new ApiError(415, 'Envie dados em JSON.');
   const reader = request.body?.getReader();
@@ -97,6 +103,11 @@ export default {
         const auth = await supabase(env, '/auth/v1/token?grant_type=password', null, { email: data.email.trim(), password: data.password });
         return json({ ok: true }, 200, { 'Set-Cookie': cookie(request, auth.access_token, Math.min(auth.expires_in, 3600)) });
       }
+      if(url.pathname==='/api/catalog/image'&&request.method==='GET'){
+        const slug=url.searchParams.get('loja'),id=url.searchParams.get('id'),mode=url.searchParams.get('mode');
+        if(!/^[0-9a-f-]{36}$/i.test(slug||'')||!/^[0-9a-f-]{36}$/i.test(id||'')||!['unit','pack'].includes(mode))throw new ApiError(404,'Imagem indisponível.');
+        return productImage(await supabase(env,'/rest/v1/rpc/adega_catalog_image',null,{p_slug:slug,p_id:id,p_mode:mode}));
+      }
       if (url.pathname === '/api/catalog' && request.method === 'GET') {
         const slug=url.searchParams.get('loja') || '';
         if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug)) throw new ApiError(404,'Catálogo indisponível.');
@@ -115,6 +126,11 @@ export default {
       }
       const token = session(request);
       if (!token) throw new ApiError(401, 'Entre para acessar sua adega.');
+      if(url.pathname==='/api/product/image'&&request.method==='GET'){
+        const id=url.searchParams.get('id'),mode=url.searchParams.get('mode');
+        if(!/^[0-9a-f-]{36}$/i.test(id||'')||!['unit','pack'].includes(mode))throw new ApiError(404,'Imagem indisponível.');
+        return productImage(await supabase(env,'/rest/v1/rpc/adega_product_image',token,{p_id:id,p_mode:mode}));
+      }
       if(url.pathname === '/api/catalog/settings') {
         if(request.method==='GET')return json(await supabase(env,'/rest/v1/rpc/adega_catalog_settings',token,{}));
         const data=await body(request);
@@ -142,8 +158,9 @@ export default {
         return json(await supabase(env, '/rest/v1/rpc/adega_state', token, {}));
       }
       if (url.pathname === '/api/command' && request.method === 'POST') {
-        const data = await body(request);
+        const data = await body(request,160*1024);
         if (!['create_product', 'update_product', 'set_active', 'movement', 'delete_product', 'cancel_sale'].includes(data.action) || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(data.requestId || '') || !data.payload || typeof data.payload !== 'object' || Array.isArray(data.payload)) throw new ApiError(400, 'Operação inválida.');
+        for(const name of ['unit_image','pack_image'])if(Object.hasOwn(data.payload,name)&&(typeof data.payload[name]!=='string'||data.payload[name].length>65536||(data.payload[name]&&!/^data:image\/jpeg;base64,\/9j\/[A-Za-z0-9+/]*={0,2}$/.test(data.payload[name]))))throw new ApiError(400,'Imagem inválida. Selecione novamente a foto do produto.');
         if(data.action==='cancel_sale')return json(await supabase(env,'/rest/v1/rpc/adega_cancel_sale',token,{p_id:data.payload.id,p_request_id:data.requestId}));
         if(data.action==='delete_product')return json(await supabase(env,'/rest/v1/rpc/adega_delete_product',token,{p_id:data.payload.id,p_request_id:data.requestId}));
         return json(await supabase(env, '/rest/v1/rpc/adega_command', token, { p_action: data.action, p_payload: data.payload, p_request_id: data.requestId }));

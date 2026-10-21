@@ -22,3 +22,5 @@ for (const file of ['controls.js','controls.css']) await copyFile(file, 'dist/' 
 await copyFile('product-form.js', 'dist/product-form.js');
 
 await copyFile('money-inputs.js', 'dist/money-inputs.js');
+
+await copyFile('product-images.js', 'dist/product-images.js');

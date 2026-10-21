@@ -124,3 +124,25 @@ test('public checkout rejects excess boxes on the server and uses database price
 });
 
 test('old catalog tabs must reload before continuing with stock operations',async()=>{assert.equal((await worker.fetch(new Request('https://adega.example/api/catalog?loja=12345678-1234-1234-1234-123456789012'),env)).status,426);});
+
+test('public product photo only calls the published catalog RPC and serves raster bytes',async t=>{
+ t.mock.method(globalThis,'fetch',async(url,options)=>{
+  assert.match(url,/rpc\/adega_catalog_image$/);assert.equal(options.headers.Authorization,undefined);
+  const data=JSON.parse(options.body);assert.equal(data.p_mode,'pack');
+  return Response.json('data:image/jpeg;base64,/9j/AA==');
+ });
+ const response=await worker.fetch(new Request('https://adega.example/api/catalog/image?loja=12345678-1234-1234-1234-123456789012&id=12345678-1234-1234-1234-123456789013&mode=pack',{headers:{cookie:'adega_session=private'}}),env);
+ assert.equal(response.status,200);assert.equal(response.headers.get('content-type'),'image/jpeg');assert.equal(response.headers.get('cache-control'),'no-store');assert.equal(new Uint8Array(await response.arrayBuffer())[0],255);
+});
+test('private product photos require the current account, and missing public photos stay unavailable',async t=>{
+ assert.equal((await worker.fetch(new Request('https://adega.example/api/product/image?id=12345678-1234-1234-1234-123456789013&mode=unit'),env)).status,401);
+ t.mock.method(globalThis,'fetch',async()=>Response.json(null));
+ assert.equal((await worker.fetch(new Request('https://adega.example/api/catalog/image?loja=12345678-1234-1234-1234-123456789012&id=12345678-1234-1234-1234-123456789013&mode=unit'),env)).status,404);
+});
+test('product commands allow two optimized photos but reject executable or oversized data',async t=>{
+ const image='data:image/jpeg;base64,/9j/'+'A'.repeat(60000);
+ t.mock.method(globalThis,'fetch',async(url,options)=>{assert.match(url,/rpc\/adega_command$/);assert.equal(JSON.parse(options.body).p_payload.unit_image,image);return Response.json({products:[],movements:[]});});
+ const command={action:'create_product',requestId:'12345678-1234-1234-1234-123456789012',payload:{unit_image:image,pack_image:image}};
+ assert.equal((await worker.fetch(post('command',command,{cookie:'adega_session=a'}),env)).status,200);
+ for(const bad of ['data:image/svg+xml;base64,AAAA','x'.repeat(65537)])assert.equal((await worker.fetch(post('command',{...command,payload:{unit_image:bad}},{cookie:'adega_session=a'}),env)).status,400);
+});

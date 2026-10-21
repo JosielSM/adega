@@ -30,7 +30,7 @@ function renderCart(){
 function render(){
  const list=products.filter(p=>(p.name+' '+p.brand).toLocaleLowerCase('pt-BR').includes(search.value.toLocaleLowerCase('pt-BR'))&&(!category.value||p.category===category.value));
  const root=document.querySelector('#catalog-products');root.replaceChildren();
- for(const p of list){const card=node('article','','beverage');for(const [tag,cls,text] of [['span','category',p.category],['h2','',p.name],['p','brand',p.brand],['p','price',money(p.price)]])card.append(node(tag,text,cls));
+ for(const p of list){const card=node('article','','beverage');if(p.image&&p.image.startsWith('/api/catalog/image?')){const photo=node('img','','beverage-photo');photo.src=p.image;photo.alt=p.name;photo.loading='lazy';photo.decoding='async';card.append(photo);}for(const [tag,cls,text] of [['span','category',p.category],['h2','',p.name],['p','brand',p.brand],['p','price',money(p.price)]])card.append(node(tag,text,cls));
  const add=node('button','Adicionar ao carrinho','add-cart');add.disabled=!whatsapp;add.onclick=()=>chooseQuantity(p);card.append(add);root.append(card);}
  status.textContent=list.length?`${list.length} bebidas disponíveis${whatsapp?'':' · Pedidos pelo WhatsApp ainda não configurados.'}`:products.length?'Nenhuma bebida encontrada. Ajuste os filtros.':'Nenhum produto disponível no momento.';
 }

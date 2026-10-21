@@ -36,17 +36,22 @@ function productModal(id){
     <label id="product-box-price"><span id="product-pack-price-label">Preço de venda da caixa completa (R$)</span><input name="pack_price" type="number" value="${esc(p.pack_price??'')}" min="0.01" step="0.01" inputmode="decimal" placeholder="Opcional"><small>Deixe vazio para vender só unidades.</small></label>
    </div><p id="product-box-sale-note" class="product-form-help"></p>
   </section>
+  <section class="product-form-section product-photo-section" aria-labelledby="product-step-photos"><h3 id="product-step-photos"><span>4</span> Fotos do produto <small>opcional</small></h3><p class="product-form-help">As fotos aparecem no seu catálogo para clientes. JPG, PNG ou WebP de até 5 MB.</p><div class="product-photo-grid">
+   <div class="product-photo-card"><label>Foto da unidade<input type="file" accept="image/jpeg,image/png,image/webp" data-photo-input="unit"></label><img data-photo-preview="unit" hidden alt="Prévia da foto da unidade"><button type="button" class="secondary small" data-photo-remove="unit" hidden>Remover foto</button><small data-photo-feedback="unit" role="status"></small></div>
+   <div class="product-photo-card" id="product-pack-photo"><label><span id="product-pack-photo-label">Foto da embalagem</span><input type="file" accept="image/jpeg,image/png,image/webp" data-photo-input="pack"></label><img data-photo-preview="pack" hidden alt="Prévia da foto da embalagem"><button type="button" class="secondary small" data-photo-remove="pack" hidden>Remover foto</button><small data-photo-feedback="pack" role="status"></small></div>
+  </div></section>
   <details class="product-extra"><summary>Mais informações <span>Marca, código e alerta de estoque</span></summary><div class="form-grid">
    ${field('Marca (opcional)','brand',p.brand,'text','maxlength="150"')}${field('Código / código de barras (opcional)','code',p.code,'text','maxlength="150"')}
    ${field('Avisar quando restarem (unidades)','min',editing?p.min:'','number','min="0" step="1" inputmode="numeric" placeholder="Ex.: 5"')}
 
   </div></details>
  </div>`;
+ const imageEditor=typeof setupProductImages==='function'?setupProductImages(fields,p):null;
  const input=name=>form.elements.namedItem(name);
  function update(){
   const isBox=input('purchase_mode').value==='pack',size=Number(input('pack_size').value);
   const name=input('pack_name').value.toLocaleLowerCase('pt-BR'),feminine=['caixa','grade'].includes(name),plural=name+'s';
-  for(const selector of ['#product-box-size','#product-box-price','#product-box-name'])fields.querySelector(selector).hidden=!isBox;
+  for(const selector of ['#product-box-size','#product-box-price','#product-box-name','#product-pack-photo'])fields.querySelector(selector).hidden=!isBox;
   for(const name of ['pack_size','pack_price','pack_name'])input(name).disabled=!isBox;
   if(!editing){
    fields.querySelector('#product-quantity-label').textContent=isBox?(feminine?'Quantas ':'Quantos ')+plural+' comprou? *':'Quantas unidades comprou? *';
@@ -54,6 +59,7 @@ function productModal(id){
   }
   fields.querySelector('#product-size-label').textContent='Quantas unidades vêm em cada '+name+'? *';
   fields.querySelector('#product-pack-price-label').textContent='Preço de venda '+(feminine?'da ':'do ')+name+' complet'+(feminine?'a':'o')+' (R$)';
+  fields.querySelector('#product-pack-photo-label').textContent='Foto '+(feminine?'da ':'do ')+name;
   const quantity=editing?p.stock:Number(input('stock').value),cost=Number(input('purchase_cost').value);
   const summary=productPurchaseSummary(isBox?'pack':'unit',editing?0:quantity,size,cost);
   const validSize=!isBox||(Number.isInteger(size)&&size>=2&&size<=10000);
@@ -66,6 +72,7 @@ function productModal(id){
  fields.oninput=update;fields.onchange=update;update();
  form.onsubmit=async event=>{
   event.preventDefault();
+  if(imageEditor?.busy()){document.querySelector('#form-error').textContent='Aguarde a preparação das fotos.';return;}
   const values=Object.fromEntries(new FormData(form)),isBox=values.purchase_mode==='pack',size=isBox?Number(values.pack_size):1;
   const quantity=editing?0:Number(values.stock),purchaseCost=Number(values.purchase_cost);
   const summary=productPurchaseSummary(isBox?'pack':'unit',quantity,size,purchaseCost);
@@ -74,7 +81,7 @@ function productModal(id){
   if(db.products.some(product=>product.id!==id&&values.code.trim()&&product.code===values.code.trim())){error.textContent='Este código já está cadastrado.';return;}
   const data={name:values.name.trim(),brand:values.brand.trim(),code:values.code.trim(),category:values.category,cost:editing?purchaseCost:summary.unitCost,price:Number(values.price),min:Number(values.min),pack_size:size,pack_name:isBox?(values.pack_name.trim()||'Caixa'):'Caixa',pack_price:isBox&&values.pack_price?Number(values.pack_price):null};
   if(!data.name)return;
-  if(await saveCommand(editing?'update_product':'create_product',{...data,...(editing?{id}:{stock:quantity,stock_mode:isBox?'pack':'unit'})},form)){
+  if(await saveCommand(editing?'update_product':'create_product',{...data,...(imageEditor?.values()||{}),...(editing?{id}:{stock:quantity,stock_mode:isBox?'pack':'unit'})},form)){
    modal.close();products();toast(editing?'Produto atualizado.':'Produto cadastrado. Estoque calculado automaticamente.');
   }
  };

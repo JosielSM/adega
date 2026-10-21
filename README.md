@@ -13,7 +13,7 @@ As funções SQL validam as operações e calculam estoque e custo médio dentro
 ## Preparar o Supabase
 
 1. Crie um projeto chamado **Adega**.
-2. Execute as migrações de `supabase/migrations/001_adega.sql` até `009_product_removal.sql`, em ordem, uma vez cada, no SQL Editor. A migração cria tabelas, índices, RLS e funções. Use um projeto novo ou confira conflitos de nomes antes da aplicação.
+2. Execute as migrações de `supabase/migrations/001_adega.sql` até `010_product_images.sql`, em ordem, uma vez cada, no SQL Editor. A migração cria tabelas, índices, RLS e funções. Use um projeto novo ou confira conflitos de nomes antes da aplicação.
 3. Em Authentication, habilite cadastro público; no estado atual, a confirmação de e-mail está desativada temporariamente por decisão do proprietário e mantenha login anônimo desabilitado. Configure senha mínima de 8 caracteres, com letras maiúsculas, minúsculas, número e símbolo. Contas existentes continuam disponíveis.
 4. Copie a URL e a chave **publishable** (ou a chave legada **anon**). Não use `service_role`, secret key ou senha do Postgres.
 
@@ -185,3 +185,11 @@ Na finalização do catálogo, o cliente precisa escolher Pix, Dinheiro, Cartão
 O catálogo usa o protocolo v=2; abas antigas recebem aviso para recarregar e não podem concluir pelo fluxo antigo. A API POST /api/catalog/checkout consulta o catálogo publicado no banco, calcula a apresentação pelo produto (sem confiar no tamanho/preço enviados), soma caixas e unidades por produto e responde 409 se o pedido exceder o saldo. A mensagem usa os itens e preços conferidos pelo servidor. Saldo desconhecido bloqueia a compra; não há mais fallback de estoque ilimitado. Quantidades digitadas no carrinho são limitadas ao saldo compartilhado.
 
 A conferência não reserva nem baixa estoque: pedidos por WhatsApp continuam sendo propostas até a venda ser registrada pelo proprietário. Duas consultas simultâneas podem obter o mesmo saldo disponível. O proprietário escolheu explicitamente manter apenas a conferência do saldo antes do envio, sem reservas. Validado no endpoint de produção: 5 caixas solicitadas contra saldo de 4 resultaram em 409, sem registrar venda.
+
+## Fotos por apresentação do produto
+
+A migração 010 adiciona fotos opcionais e independentes da unidade e da embalagem. O cadastro e a edição permitem selecionar JPG/PNG/WebP de até 5 MB, ver a prévia e remover. O navegador redimensiona para até 512 px e converte em JPEG otimizado de até 48 KB (64 KB de data URL). Imagens são persistidas no Postgres por conta, sem novos serviços pagos. A caixa/grade/fardo/pack usa sua própria foto no catálogo, sem reutilizar silenciosamente a foto da unidade.
+
+A API e os constraints do banco aceitam somente o formato raster gerado e limitam o tamanho. Comandos com duas fotos têm limite de 160 KB; os demais endpoints mantêm seus limites. O histórico de idempotência guarda apenas o checksum das fotos, sem duplicar seus dados. Editar sem selecionar fotos preserva as imagens existentes.
+
+Consultas automáticas de estoque recebem apenas indicadores e versão das fotos. Os bytes são carregados sob demanda em endpoints próprios. A prévia privada exige a sessão da conta; a imagem pública exige catálogo publicado e produto da mesma adega, ativo, não excluído e com saldo positivo. Desativar o catálogo ou retirar o produto impede novas leituras públicas. Cópias já vistas ou salvas por clientes não podem ser recolhidas.

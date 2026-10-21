@@ -28,8 +28,8 @@ export function catalogVariants(products){
  return products.flatMap(p=>{
   if(!Number.isSafeInteger(p.availableUnits)||p.availableUnits<=0)return [];
   const common={...p,productId:p.id,stockUnits:p.availableUnits};
-  const variants=[{...common,id:p.id+':unit',name:p.name+' · Unidade',units:1}];
-  if(p.packSize>1&&p.packPrice>0&&p.availablePacks>0)variants.push({...common,id:p.id+':pack',name:p.name+' · '+(p.packName||'Caixa')+' com '+p.packSize+' un.',price:p.packPrice,units:p.packSize});
+  const variants=[{...common,id:p.id+':unit',name:p.name+' · Unidade',units:1,image:p.unitImage||''}];
+  if(p.packSize>1&&p.packPrice>0&&p.availablePacks>0)variants.push({...common,id:p.id+':pack',name:p.name+' · '+(p.packName||'Caixa')+' com '+p.packSize+' un.',price:p.packPrice,units:p.packSize,image:p.packImage||''});
   return variants;
  });
 }
