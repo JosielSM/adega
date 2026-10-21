@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1090" viewBox="0 0 1200 1090"><rect width="1200" height="1090" fill="#f5f1eb"/><text x="60" y="65" font-family="Segoe UI,Arial,sans-serif" font-size="34" font-weight="700" fill="#142f43">Distribuidora</text><text x="60" y="98" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#697b87">Quatro versões para o ícone da tela inicial</text><rect x="60" y="130" width="520" height="425" rx="24" fill="#fff" stroke="#e5dfd7"/><defs><clipPath id="c0"><rect x="190" y="158" width="260" height="260" rx="58"/></clipPath></defs><g clip-path="url(#c0)"><g transform="translate(190 158) scale(3.25)">
+ <rect width="80" height="80" fill="#142f43"/>
+ <path d="M34 22h12v11c0 7 10 9 10 18v10a6 6 0 0 1-6 6H30a6 6 0 0 1-6-6V51c0-9 10-11 10-18Z" fill="#c99a70"/>
+ <rect x="33" y="14" width="14" height="7" rx="2" fill="#f5eee5"/>
+ <rect x="29" y="45" width="22" height="14" rx="4" fill="#f5eee5"/>
+ <path d="M35 52h10" stroke="#142f43" stroke-width="3" stroke-linecap="round"/>
+</g></g><text x="92" y="472" fill="#142f43" font-size="26" font-family="Segoe UI,Arial,sans-serif" font-weight="600">01 · Essencial</text><defs><clipPath id="s0"><rect x="485" y="445" width="56" height="56" rx="13"/></clipPath></defs><g clip-path="url(#s0)"><g transform="translate(485 445) scale(.7)">
+ <rect width="80" height="80" fill="#142f43"/>
+ <path d="M34 22h12v11c0 7 10 9 10 18v10a6 6 0 0 1-6 6H30a6 6 0 0 1-6-6V51c0-9 10-11 10-18Z" fill="#c99a70"/>
+ <rect x="33" y="14" width="14" height="7" rx="2" fill="#f5eee5"/>
+ <rect x="29" y="45" width="22" height="14" rx="4" fill="#f5eee5"/>
+ <path d="M35 52h10" stroke="#142f43" stroke-width="3" stroke-linecap="round"/>
+</g></g><text x="92" y="508" fill="#697b87" font-size="17" font-family="Segoe UI,Arial,sans-serif">Ícone do aplicativo</text><rect x="610" y="130" width="520" height="425" rx="24" fill="#fff" stroke="#e5dfd7"/><defs><clipPath id="c1"><rect x="740" y="158" width="260" height="260" rx="58"/></clipPath></defs><g clip-path="url(#c1)"><g transform="translate(740 158) scale(3.25)">
+ <rect width="80" height="80" fill="#c99a70"/>
+ <path d="M34 23v11c0 6-10 8-10 18v9a5 5 0 0 0 5 5h22a5 5 0 0 0 5-5v-9c0-10-10-12-10-18V23Z" fill="none" stroke="#142f43" stroke-width="4" stroke-linejoin="round"/>
+ <path d="M33 16h14M35 22h10" stroke="#142f43" stroke-width="4" stroke-linecap="round"/>
+ <rect x="29" y="45" width="22" height="13" rx="4" fill="#f5eee5"/>
+ <path d="M36 51.5h8" stroke="#142f43" stroke-width="3" stroke-linecap="round"/>
+</g></g><text x="642" y="472" fill="#142f43" font-size="26" font-family="Segoe UI,Arial,sans-serif" font-weight="600">02 · Contorno</text><defs><clipPath id="s1"><rect x="1035" y="445" width="56" height="56" rx="13"/></clipPath></defs><g clip-path="url(#s1)"><g transform="translate(1035 445) scale(.7)">
+ <rect width="80" height="80" fill="#c99a70"/>
+ <path d="M34 23v11c0 6-10 8-10 18v9a5 5 0 0 0 5 5h22a5 5 0 0 0 5-5v-9c0-10-10-12-10-18V23Z" fill="none" stroke="#142f43" stroke-width="4" stroke-linejoin="round"/>
+ <path d="M33 16h14M35 22h10" stroke="#142f43" stroke-width="4" stroke-linecap="round"/>
+ <rect x="29" y="45" width="22" height="13" rx="4" fill="#f5eee5"/>
+ <path d="M36 51.5h8" stroke="#142f43" stroke-width="3" stroke-linecap="round"/>
+</g></g><text x="642" y="508" fill="#697b87" font-size="17" font-family="Segoe UI,Arial,sans-serif">Ícone do aplicativo</text><rect x="60" y="590" width="520" height="425" rx="24" fill="#fff" stroke="#e5dfd7"/><defs><clipPath id="c2"><rect x="190" y="618" width="260" height="260" rx="58"/></clipPath></defs><g clip-path="url(#c2)"><g transform="translate(190 618) scale(3.25)">
+ <rect width="80" height="80" fill="#f5eee5"/>
+ <path d="M20 17h17c18 0 28 8 28 23S55 63 37 63H20Z" fill="#142f43"/>
+ <path d="M35 31h9v6c0 4 7 6 7 12v4a3 3 0 0 1-3 3H31a3 3 0 0 1-3-3v-4c0-6 7-8 7-12Z" fill="#f5eee5"/>
+ <rect x="34" y="23" width="11" height="6" rx="1.5" fill="#c99a70"/>
+ <rect x="32" y="44" width="15" height="6" rx="2" fill="#c99a70"/>
+</g></g><text x="92" y="932" fill="#142f43" font-size="26" font-family="Segoe UI,Arial,sans-serif" font-weight="600">03 · Monograma</text><defs><clipPath id="s2"><rect x="485" y="905" width="56" height="56" rx="13"/></clipPath></defs><g clip-path="url(#s2)"><g transform="translate(485 905) scale(.7)">
+ <rect width="80" height="80" fill="#f5eee5"/>
+ <path d="M20 17h17c18 0 28 8 28 23S55 63 37 63H20Z" fill="#142f43"/>
+ <path d="M35 31h9v6c0 4 7 6 7 12v4a3 3 0 0 1-3 3H31a3 3 0 0 1-3-3v-4c0-6 7-8 7-12Z" fill="#f5eee5"/>
+ <rect x="34" y="23" width="11" height="6" rx="1.5" fill="#c99a70"/>
+ <rect x="32" y="44" width="15" height="6" rx="2" fill="#c99a70"/>
+</g></g><text x="92" y="968" fill="#697b87" font-size="17" font-family="Segoe UI,Arial,sans-serif">Ícone do aplicativo</text><rect x="610" y="590" width="520" height="425" rx="24" fill="#fff" stroke="#e5dfd7"/><defs><clipPath id="c3"><rect x="740" y="618" width="260" height="260" rx="58"/></clipPath></defs><g clip-path="url(#c3)"><g transform="translate(740 618) scale(3.25)">
+ <rect width="80" height="80" fill="#142f43"/>
+ <g transform="rotate(-12 29 41)">
+  <path d="M24 24h9v11c0 4 7 6 7 12v14a4 4 0 0 1-4 4H21a4 4 0 0 1-4-4V47c0-6 7-8 7-12Z" fill="#c99a70"/>
+  <rect x="23" y="17" width="11" height="6" rx="1.5" fill="#f5eee5"/>
+  <rect x="21" y="45" width="15" height="10" rx="2" fill="#142f43"/>
+ </g>
+ <g transform="rotate(12 50 41)">
+  <path d="M46 24h9v11c0 4 7 6 7 12v14a4 4 0 0 1-4 4H43a4 4 0 0 1-4-4V47c0-6 7-8 7-12Z" fill="#f5eee5" stroke="#142f43" stroke-width="2" stroke-linejoin="round"/>
+  <rect x="45" y="17" width="11" height="6" rx="1.5" fill="#c99a70"/>
+  <rect x="43" y="45" width="15" height="10" rx="2" fill="#c99a70"/>
+ </g>
+</g></g><text x="642" y="932" fill="#142f43" font-size="26" font-family="Segoe UI,Arial,sans-serif" font-weight="600">04 · Seleção</text><defs><clipPath id="s3"><rect x="1035" y="905" width="56" height="56" rx="13"/></clipPath></defs><g clip-path="url(#s3)"><g transform="translate(1035 905) scale(.7)">
+ <rect width="80" height="80" fill="#142f43"/>
+ <g transform="rotate(-12 29 41)">
+  <path d="M24 24h9v11c0 4 7 6 7 12v14a4 4 0 0 1-4 4H21a4 4 0 0 1-4-4V47c0-6 7-8 7-12Z" fill="#c99a70"/>
+  <rect x="23" y="17" width="11" height="6" rx="1.5" fill="#f5eee5"/>
+  <rect x="21" y="45" width="15" height="10" rx="2" fill="#142f43"/>
+ </g>
+ <g transform="rotate(12 50 41)">
+  <path d="M46 24h9v11c0 4 7 6 7 12v14a4 4 0 0 1-4 4H43a4 4 0 0 1-4-4V47c0-6 7-8 7-12Z" fill="#f5eee5" stroke="#142f43" stroke-width="2" stroke-linejoin="round"/>
+  <rect x="45" y="17" width="11" height="6" rx="1.5" fill="#c99a70"/>
+  <rect x="43" y="45" width="15" height="10" rx="2" fill="#c99a70"/>
+ </g>
+</g></g><text x="642" y="968" fill="#697b87" font-size="17" font-family="Segoe UI,Arial,sans-serif">Ícone do aplicativo</text></svg>
