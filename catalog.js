@@ -25,7 +25,7 @@ function renderCart(){
  document.querySelector('#open-cart').textContent='Ver carrinho · '+count+' itens · '+money(total/100);
  document.querySelector('#open-cart').hidden=!available;
  document.querySelector('#checkout').disabled=!count||!available||!/^55\d{10,11}$/.test(whatsapp);
- if(available&&!whatsapp)feedback.textContent='Esta adega ainda não configurou o WhatsApp para pedidos.';
+ if(available&&!whatsapp)feedback.textContent='Esta distribuidora ainda não configurou o WhatsApp para pedidos.';
 }
 function render(){
  const list=products.filter(p=>(p.name+' '+p.brand).toLocaleLowerCase('pt-BR').includes(search.value.toLocaleLowerCase('pt-BR'))&&(!category.value||p.category===category.value));

@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "Adega",
-  "short_name": "Adega",
-  "description": "Gestão de bebidas, compras, vendas e estoque da sua adega.",
+  "name": "Distribuidora",
+  "short_name": "Distribuidora",
+  "description": "Gestão de bebidas, compras, vendas e estoque da sua distribuidora.",
   "lang": "pt-BR",
   "start_url": "/",
   "scope": "/",

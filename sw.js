@@ -1,5 +1,5 @@
 // Only a public offline notice is cached. Never cache sessions, API or account data.
-const CACHE = 'adega-public-v1';
+const CACHE = 'adega-public-v2';
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.add('/offline.html')));
   self.skipWaiting();

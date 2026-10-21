@@ -125,7 +125,7 @@ export default {
         return json({items,whatsapp:catalog.whatsapp});
       }
       const token = session(request);
-      if (!token) throw new ApiError(401, 'Entre para acessar sua adega.');
+      if (!token) throw new ApiError(401, 'Entre para acessar sua distribuidora.');
       if(url.pathname==='/api/product/image'&&request.method==='GET'){
         const id=url.searchParams.get('id'),mode=url.searchParams.get('mode');
         if(!/^[0-9a-f-]{36}$/i.test(id||'')||!['unit','pack'].includes(mode))throw new ApiError(404,'Imagem indisponível.');

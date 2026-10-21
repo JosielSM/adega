@@ -10,9 +10,9 @@
   const closeMenu = () => {menu.hidden = true; toggle.setAttribute('aria-expanded','false');};
   function paint(data) {
     document.querySelector('#account-email').textContent = data?.email || 'Carregando conta…';
-    document.querySelector('#account-name').textContent = data?.companyName || 'Minha adega';
+    document.querySelector('#account-name').textContent = data?.companyName || 'Minha distribuidora';
     document.querySelector('#profile-initial').textContent = (data?.companyName || data?.email || 'A').slice(0,1).toUpperCase();
-    document.querySelector('#company-brand-name').textContent = data?.companyName || 'Adega';
+    document.querySelector('#company-brand-name').textContent = data?.companyName || 'Distribuidora';
     document.querySelector('#company-brand-logo').src = data?.logo || 'assets/logo.svg';
   }
   async function load() {
