@@ -8,9 +8,9 @@ test('WhatsApp draft includes only products, quantities, values and total',()=>{
 });
 test('cart rechecks availability and price before checkout',()=>{
  const cart=new Map([['a',{id:'a',price:10,quantity:2}],['b',{id:'b',price:5,quantity:1}]]);
- assert.equal(reconcileCart(cart,[{id:'a',name:'A',price:12}]),true);
+ assert.equal(reconcileCart(cart,[{id:'a',name:'A',price:12,stockUnits:10}]),true);
  assert.equal(cart.has('b'),false);assert.equal(cart.get('a').price,12);assert.equal(cart.get('a').quantity,2);
- assert.equal(reconcileCart(cart,[{id:'a',name:'A',price:12}]),false);
+ assert.equal(reconcileCart(cart,[{id:'a',name:'A',price:12,stockUnits:10}]),false);
 });
 
 test('delivery address is included in WhatsApp draft with line breaks',()=>{

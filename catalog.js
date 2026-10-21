@@ -17,7 +17,7 @@ function renderCart(){
   total+=Math.round(item.price*100)*item.quantity;count+=item.quantity;
   const row=node('div','','cart-item');const info=node('div','');info.append(node('strong',item.name),node('p',money(item.price)+(item.units>1?' por embalagem':' por unidade'),'note'));row.append(info);
   const controls=node('div','','quantity');
-  for(const [label,text,delta] of [['Diminuir quantidade de ','−',-1],['Aumentar quantidade de ','+',1]]){const button=node('button',text);button.type='button';button.setAttribute('aria-label',label+item.name);button.onclick=()=>change(item,delta);if(delta===1)button.disabled=item.quantity>=cartCapacity(cart,item);controls.append(button);if(delta===-1){const input=node('input','');input.type='number';input.inputMode='numeric';input.min='1';input.max=String(cartCapacity(cart,item));input.step='1';input.value=String(item.quantity);input.setAttribute('aria-label','Quantidade de '+item.name);input.onchange=()=>{if(!input.value||!setQuantity(item,Number(input.value))){input.value=String(cart.get(item.id)?.quantity||item.quantity);}};controls.append(input);}}
+  for(const [label,text,delta] of [['Diminuir quantidade de ','−',-1],['Aumentar quantidade de ','+',1]]){const button=node('button',text);button.type='button';button.setAttribute('aria-label',label+item.name);button.onclick=()=>change(item,delta);if(delta===1)button.disabled=item.quantity>=cartCapacity(cart,item);controls.append(button);if(delta===-1){const input=node('input','');input.type='number';input.inputMode='numeric';input.min='1';input.max=String(cartCapacity(cart,item));input.step='1';input.value=String(item.quantity);input.setAttribute('aria-label','Quantidade de '+item.name);input.oninput=()=>{const max=cartCapacity(cart,item);if(Number(input.value)>max){input.value=String(max);feedback.textContent='Estoque disponível: no máximo '+max+(item.units>1?' embalagens':' unidades')+' deste item. Unidades e embalagens dividem o mesmo saldo.';}};input.onchange=()=>{if(!input.value||!setQuantity(item,Number(input.value))){input.value=String(cart.get(item.id)?.quantity||item.quantity);}};controls.append(input);}}
   const remove=node('button','Remover','remove-item');remove.onclick=()=>{cart.delete(item.id);renderCart();};remove.setAttribute('aria-label','Remover '+item.name);row.append(controls,remove);root.append(row);
  }
  if(!count)root.append(node('p','Seu carrinho está vazio. Escolha uma bebida no catálogo.'));
@@ -36,7 +36,7 @@ function render(){
 }
 async function load(){
  retry.hidden=true;
- try{const response=await fetch('/api/catalog?loja='+encodeURIComponent(new URLSearchParams(location.search).get('loja')||''),{credentials:'omit',cache:'no-store'});const result=await response.json();if(!response.ok)throw Error(result.error||'Catálogo indisponível.');
+ try{const response=await fetch('/api/catalog?v=2&loja='+encodeURIComponent(new URLSearchParams(location.search).get('loja')||''),{credentials:'omit',cache:'no-store'});const result=await response.json();if(!response.ok)throw Error(result.error||'Catálogo indisponível.');
  available=true;storeName=result.name;whatsapp=result.whatsapp||'';products=catalogVariants(result.products);
  const changed=reconcileCart(cart,products);if(changed)feedback.textContent='O catálogo mudou. Confira os itens e valores antes de continuar.';
  document.querySelector('.brand-scene').hidden=false;window.dispatchEvent(new Event('catalog-ready'));
@@ -88,9 +88,15 @@ document.querySelector('#checkout').onclick=async event=>{
  if(!['Pix','Dinheiro','Cartão de débito','Cartão de crédito'].includes(payment.value)){feedback.textContent='Escolha a forma de pagamento antes de continuar.';payment.reportValidity();return;}
  const button=event.currentTarget;button.disabled=true;button.textContent='Conferindo pedido…';feedback.textContent='';
  try{const result=await load();if(!result.ok||result.changed||!cart.size||!/^55\d{10,11}$/.test(whatsapp))return;
- const text=orderMessage([...cart.values()],address,payment.value);
- location.assign('https://wa.me/'+whatsapp+'?text='+encodeURIComponent(text));
- }finally{button.textContent='Finalizar pelo WhatsApp';renderCart();}
+ button.disabled=true;
+ const response=await fetch('/api/catalog/checkout',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'omit',cache:'no-store',signal:AbortSignal.timeout(20000),body:JSON.stringify({slug:new URLSearchParams(location.search).get('loja'),items:[...cart.values()].map(item=>({id:item.id,quantity:item.quantity}))})});
+ const checked=await response.json();
+ if(!response.ok){await load();feedback.textContent=checked.error||'Estoque insuficiente. Confira o carrinho.';return;}
+ if(!dialog.open)return;
+ if(checked.items.length!==cart.size||checked.items.some(item=>cart.get(item.id)?.price!==item.price||cart.get(item.id)?.quantity!==item.quantity)){await load();feedback.textContent='O pedido mudou. Confira os valores e quantidades e tente novamente.';return;}
+ const text=orderMessage(checked.items,address,payment.value);
+ location.assign('https://wa.me/'+checked.whatsapp+'?text='+encodeURIComponent(text));
+ }catch{feedback.textContent='Não foi possível confirmar o estoque. Reconecte e tente novamente.';}finally{button.textContent='Finalizar pelo WhatsApp';renderCart();}
 };
 document.querySelectorAll('.delivery-fields input').forEach(input=>input.oninput=()=>input.setCustomValidity(''));
 setInterval(()=>{if(!document.hidden&&!dialog.open&&!quantityDialog.open)load();},30000);window.addEventListener('online',load);load();

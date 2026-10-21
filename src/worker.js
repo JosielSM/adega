@@ -1,4 +1,5 @@
 import { authRoute } from './auth.js';
+import { validateCatalogCart } from './catalog-stock.js';
 const COOKIE = 'adega_session';
 const LIMIT = 32 * 1024;
 
@@ -99,9 +100,18 @@ export default {
       if (url.pathname === '/api/catalog' && request.method === 'GET') {
         const slug=url.searchParams.get('loja') || '';
         if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug)) throw new ApiError(404,'Catálogo indisponível.');
+        if(url.searchParams.get('v')!=='2')throw new ApiError(426,'O catálogo foi atualizado. Recarregue esta página para conferir o estoque e continuar.');
         const catalog=await supabase(env,'/rest/v1/rpc/adega_public_catalog',null,{p_slug:slug});
         if(!catalog)throw new ApiError(404,'Catálogo indisponível.');
         return json(catalog);
+      }
+      if(url.pathname==='/api/catalog/checkout'&&request.method==='POST'){
+        const data=await body(request);
+        if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(data.slug||''))throw new ApiError(404,'Catálogo indisponível.');
+        const catalog=await supabase(env,'/rest/v1/rpc/adega_public_catalog',null,{p_slug:data.slug});
+        if(!catalog)throw new ApiError(404,'Catálogo indisponível.');
+        let items;try{items=validateCatalogCart(catalog,data.items);}catch(error){throw new ApiError(409,error.message);}
+        return json({items,whatsapp:catalog.whatsapp});
       }
       const token = session(request);
       if (!token) throw new ApiError(401, 'Entre para acessar sua adega.');

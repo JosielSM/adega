@@ -83,7 +83,7 @@ test('public catalog ignores browser session and exposes only explicit catalog R
     assert.equal(options.headers.Authorization,undefined);
     return Response.json({name:'Loja A',logo:'',products:[{name:'Bebida',brand:'Marca',category:'Vinhos',price:20}]});
   });
-  const response=await worker.fetch(new Request('https://adega.example/api/catalog?loja=12345678-1234-1234-1234-123456789012',{headers:{cookie:'adega_session=private-token'}}),env);
+  const response=await worker.fetch(new Request('https://adega.example/api/catalog?v=2&loja=12345678-1234-1234-1234-123456789012',{headers:{cookie:'adega_session=private-token'}}),env);
   assert.equal(response.status,200);assert.equal(response.headers.get('cache-control'),'no-store');
   assert.equal((await response.json()).products.length,1);
 });
@@ -111,3 +111,16 @@ test('cancel sale forwards current account token and idempotency to dedicated RP
  const response=await worker.fetch(post('command',{action:'cancel_sale',payload:{id:'sale-id',owner_id:'other'},requestId:'12345678-1234-1234-1234-123456789012'},{cookie:'adega_session=account-a'}),env);
  assert.equal(response.status,200);
 });
+
+test('public checkout rejects excess boxes on the server and uses database prices',async t=>{
+ t.mock.method(globalThis,'fetch',async(url,options)=>{
+  assert.match(url,/rpc\/adega_public_catalog$/);assert.equal(options.headers.Authorization,undefined);
+  return Response.json({whatsapp:'5511999999999',products:[{id:'a',name:'Cerveja',price:5,packSize:12,packPrice:45,packName:'Caixa',availableUnits:48}]});
+ });
+ const slug='12345678-1234-1234-1234-123456789012';
+ assert.equal((await worker.fetch(post('catalog/checkout',{slug,items:[{id:'a:pack',quantity:5}]}),env)).status,409);
+ const result=await worker.fetch(post('catalog/checkout',{slug,items:[{id:'a:pack',quantity:4,price:1,units:1}]}),env);
+ assert.equal(result.status,200);assert.equal((await result.json()).items[0].price,45);
+});
+
+test('old catalog tabs must reload before continuing with stock operations',async()=>{assert.equal((await worker.fetch(new Request('https://adega.example/api/catalog?loja=12345678-1234-1234-1234-123456789012'),env)).status,426);});

@@ -179,3 +179,9 @@ Novos cadastros iniciam estoque, tamanho da embalagem e alerta mínimo sem núme
 Adicionar ao carrinho abre um diálogo com campo numérico vazio, botões de aumentar/diminuir, disponibilidade e subtotal. Antes de adicionar a quantidade escolhida, o catálogo é consultado novamente; mudanças de preço ou carrinho pedem nova conferência. Dentro do carrinho, a quantidade pode ser digitada diretamente ou ajustada pelos botões. O limite fixo de 99 foi removido; quantidades inteiras respeitam o estoque compartilhado entre unidades e embalagens. Pedidos continuam sem reserva ou baixa automática, com conferência adicional antes de abrir o WhatsApp.
 
 Na finalização do catálogo, o cliente precisa escolher Pix, Dinheiro, Cartão de débito ou Cartão de crédito. A seleção começa vazia e usa o seletor visual da Adega. A mensagem do WhatsApp inclui a forma de pagamento após o endereço, sem coletar dados de cartão ou processar pagamentos.
+
+## Conferência de estoque do pedido
+
+O catálogo usa o protocolo v=2; abas antigas recebem aviso para recarregar e não podem concluir pelo fluxo antigo. A API POST /api/catalog/checkout consulta o catálogo publicado no banco, calcula a apresentação pelo produto (sem confiar no tamanho/preço enviados), soma caixas e unidades por produto e responde 409 se o pedido exceder o saldo. A mensagem usa os itens e preços conferidos pelo servidor. Saldo desconhecido bloqueia a compra; não há mais fallback de estoque ilimitado. Quantidades digitadas no carrinho são limitadas ao saldo compartilhado.
+
+A conferência não reserva nem baixa estoque: pedidos por WhatsApp continuam sendo propostas até a venda ser registrada pelo proprietário. Duas consultas simultâneas podem obter o mesmo saldo disponível. O proprietário escolheu explicitamente manter apenas a conferência do saldo antes do envio, sem reservas. Validado no endpoint de produção: 5 caixas solicitadas contra saldo de 4 resultaram em 409, sem registrar venda.
