@@ -36,3 +36,15 @@ test('WhatsApp order includes the chosen payment method together with address an
   assert.match(text,/15,00/);assert.match(text,/Bairro: Centro/);
  }
 });
+
+test('cash orders include the tender amount and exact change in cents',()=>{
+ const items=[{name:'Bebida',price:19.90,quantity:3}];
+ const text=orderMessage(items,'Rua A','Dinheiro',100);
+ assert.match(text,/Total a pagar:.*59,70/);
+ assert.match(text,/Troco para:.*100,00/);
+ assert.match(text,/Troco a devolver:.*40,30/);
+ assert.match(orderMessage(items,'','Dinheiro',59.70),/Troco a devolver:.*0,00/);
+ assert.match(orderMessage(items,'','Dinheiro',null),/Sem troco/);
+ for(const value of [50,0,-10,NaN,Infinity,'100'])assert.throws(()=>orderMessage(items,'','Dinheiro',value),/igual ou maior/);
+ for(const method of ['Pix','Cartão de débito','Cartão de crédito'])assert.doesNotMatch(orderMessage(items,'',method,100),/Troco para|Troco a devolver|Sem troco/);
+});

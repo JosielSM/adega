@@ -1,10 +1,18 @@
-export function orderMessage(items,address='',payment='') {
+export function orderMessage(items,address='',payment='',cashTender=undefined) {
   const money=n=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
   const total=items.reduce((sum,item)=>sum+Math.round(item.price*100)*item.quantity,0)/100;
   const sections=items.map(item=>`🛒 *${item.quantity} × ${item.name}*\n🏷️ Valor unitário: ${money(item.price)}\n💵 Valor: ${money(Math.round(item.price*100)*item.quantity/100)}`);
   sections.push(`💰 *Total a pagar: ${money(total)}*`);
   if(address.trim())sections.push('📍 *Endereço de entrega*\n'+address.trim().replace(/^Bairro:/gm,'🏘️ Bairro:').replace(/^Rua:/gm,'🛣️ Rua:').replace(/^Número:/gm,'🔢 Número:'));
   if(payment.trim())sections.push('💳 *Forma de pagamento*\n'+payment.trim());
+  if(payment==='Dinheiro'&&cashTender!==undefined){
+    if(cashTender===null)sections.push('💵 *Sem troco — pagamento com o valor exato.*');
+    else{
+      const paid=Math.round(cashTender*100),due=Math.round(total*100);
+      if(typeof cashTender!=='number'||!Number.isSafeInteger(paid)||paid<due)throw Error('O valor para troco deve ser igual ou maior que o total do pedido.');
+      sections.push('💵 *Troco para: '+money(paid/100)+'*\n🪙 Troco a devolver: '+money((paid-due)/100));
+    }
+  }
   return sections.join('\n\n');
 }
 export function reconcileCart(cart,products) {

@@ -5,6 +5,21 @@ const status=document.querySelector('#catalog-status'),retry=document.querySelec
 const search=document.querySelector('#catalog-search'),category=document.querySelector('#catalog-category');
 const dialog=document.querySelector('#cart-dialog'),feedback=document.querySelector('#cart-feedback');
 const money=n=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
+const cashInput=document.querySelector('#cash-tender'),cashExact=document.querySelector('#cash-exact'),paymentInput=document.querySelector('#delivery-payment');
+let cashCents=null;
+function updateCash(){
+ const cash=paymentInput.value==='Dinheiro',exact=cashExact.checked;
+ document.querySelector('#cash-fields').hidden=!cash;
+ document.querySelector('#cash-amount-label').hidden=exact;
+ cashInput.disabled=!cash||exact;cashInput.required=cash&&!exact;
+ const total=[...cart.values()].reduce((sum,item)=>sum+Math.round(item.price*100)*item.quantity,0),help=document.querySelector('#cash-feedback');
+ const invalid=cash&&!exact&&cashCents!==null&&cashCents<total;
+ cashInput.setAttribute('aria-invalid',String(invalid));
+ help.textContent=!cash?'':exact?'Seu pedido será enviado como pagamento sem troco.':cashCents===null?'Informe o valor da nota ou do dinheiro que você vai entregar.':invalid?'O valor deve ser igual ou maior que o total de '+money(total/100)+'.':'Troco estimado: '+money((cashCents-total)/100);
+}
+cashInput.oninput=()=>{const digits=cashInput.value.replace(/\D/g,'').slice(0,12);cashCents=digits?Number(digits):null;cashInput.value=cashCents===null?'':money(cashCents/100);updateCash();};
+cashInput.onpaste=event=>{const text=event.clipboardData?.getData('text')?.trim();if(!text)return;event.preventDefault();let value=text.replace(/R\$|\s/g,'');if(value.includes(','))value=value.replace(/\./g,'').replace(',','.');const amount=Number(value);if(Number.isFinite(amount)&&amount>=0&&amount<10000000000){cashCents=Math.round(amount*100);cashInput.value=money(cashCents/100);updateCash();}};
+cashExact.onchange=updateCash;paymentInput.addEventListener('change',updateCash);updateCash();
 function node(tag,text,cls=''){const element=document.createElement(tag);element.textContent=text;element.className=cls;return element;}
 function photoPlaceholder(){const placeholder=node('span','','beverage-no-photo');const icon=node('span','','placeholder-icon');icon.innerHTML=categoryIcon('Outros');placeholder.append(icon,node('span','Imagem em breve'));return placeholder;}
 function categoryIcon(name){
@@ -35,6 +50,7 @@ function renderCart(){
  document.querySelector('#review-order').disabled=!count||!available;
  document.querySelector('#checkout').disabled=!count||!available||!/^55\d{10,11}$/.test(whatsapp);
  if(available&&!whatsapp)feedback.textContent='Esta distribuidora ainda não configurou o WhatsApp para pedidos.';
+ updateCash();
 }
 function render(){
  const list=products.filter(p=>(p.name+' '+p.brand).toLocaleLowerCase('pt-BR').includes(search.value.toLocaleLowerCase('pt-BR'))&&(!category.value||p.category===category.value));
@@ -103,6 +119,10 @@ document.querySelector('#checkout').onclick=async event=>{
  const address=`Bairro: ${addressFields[0].value.trim()}\nRua: ${addressFields[1].value.trim()}\nNúmero: ${addressFields[2].value.trim()}`;
  const payment=document.querySelector('#delivery-payment');
  if(!['Pix','Dinheiro','Cartão de débito','Cartão de crédito'].includes(payment.value)){feedback.textContent='Escolha a forma de pagamento antes de continuar.';payment.reportValidity();return;}
+ const cashTender=payment.value==='Dinheiro'?(cashExact.checked?null:cashCents===null?undefined:cashCents/100):undefined;
+ const selectedPayment=payment.value;
+ const cashTotal=[...cart.values()].reduce((sum,item)=>sum+Math.round(item.price*100)*item.quantity,0);
+ if(payment.value==='Dinheiro'&&!cashExact.checked&&(cashCents===null||cashCents<cashTotal)){updateCash();feedback.textContent='Informe um valor para troco igual ou maior que o total, ou escolha pagar o valor exato.';cashInput.setAttribute('aria-invalid','true');cashInput.focus();return;}
  const button=event.currentTarget;button.disabled=true;button.textContent='Conferindo pedido…';feedback.textContent='';
  try{const result=await load();if(!result.ok||result.changed||!cart.size||!/^55\d{10,11}$/.test(whatsapp))return;
  button.disabled=true;
@@ -111,7 +131,9 @@ document.querySelector('#checkout').onclick=async event=>{
  if(!response.ok){await load();feedback.textContent=checked.error||'Estoque insuficiente. Confira o carrinho.';return;}
  if(!dialog.open)return;
  if(checked.items.length!==cart.size||checked.items.some(item=>cart.get(item.id)?.price!==item.price||cart.get(item.id)?.quantity!==item.quantity)){await load();feedback.textContent='O pedido mudou. Confira os valores e quantidades e tente novamente.';return;}
- const text=orderMessage(checked.items,address,payment.value);
+ const currentCash=payment.value==='Dinheiro'?(cashExact.checked?null:cashCents===null?undefined:cashCents/100):undefined;
+ if(payment.value!==selectedPayment||currentCash!==cashTender){feedback.textContent='A forma de pagamento ou o valor para troco mudou. Confira e finalize novamente.';return;}
+ const text=orderMessage(checked.items,address,selectedPayment,cashTender);
  location.assign('https://wa.me/'+checked.whatsapp+'?text='+encodeURIComponent(text));
  }catch{feedback.textContent='Não foi possível confirmar o estoque. Reconecte e tente novamente.';}finally{button.textContent='Finalizar pelo WhatsApp';renderCart();}
 };
