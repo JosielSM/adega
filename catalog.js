@@ -6,6 +6,11 @@ const search=document.querySelector('#catalog-search'),category=document.querySe
 const dialog=document.querySelector('#cart-dialog'),feedback=document.querySelector('#cart-feedback');
 const money=n=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
 function node(tag,text,cls=''){const element=document.createElement(tag);element.textContent=text;element.className=cls;return element;}
+function photoPlaceholder(){const placeholder=node('span','','beverage-no-photo');const icon=node('span','','placeholder-icon');icon.innerHTML=categoryIcon('Outros');placeholder.append(icon,node('span','Imagem em breve'));return placeholder;}
+function categoryIcon(name){
+ const paths=name==='Cervejas'?'<path d="M7 6h10v14H7ZM17 8h3v8h-3M10 10v6M14 10v6M7 6V4h10v2"/>':name==='Vinhos'||name==='Espumantes'?'<path d="M8 3h8l1 7a5 5 0 0 1-10 0ZM12 15v6M8 21h8M8 8h8"/>':!name?'<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/>':'<path d="M10 3h4v5c0 2 4 3 4 6v6H6v-6c0-3 4-4 4-6ZM9 3h6M7 13h10M7 17h10"/>';
+ return '<svg viewBox="0 0 24 24" aria-hidden="true">'+paths+'</svg>';
+}
 function change(product,delta){return setQuantity(product,(cart.get(product.id)?.quantity||0)+delta);}
 function setQuantity(product,quantity){
  if(!setCartQuantity(cart,product,quantity)){feedback.textContent='Confira a quantidade disponível. Unidades e embalagens usam o mesmo estoque.';status.textContent=feedback.textContent;return false;}
@@ -22,16 +27,26 @@ function renderCart(){
  }
  if(!count)root.append(node('p','Seu carrinho está vazio. Escolha uma bebida no catálogo.'));
  document.querySelector('#cart-total').textContent='Total estimado: '+money(total/100);
- document.querySelector('#open-cart').textContent='Ver carrinho · '+count+' itens · '+money(total/100);
- document.querySelector('#open-cart').hidden=!available;
+ document.querySelector('#dock-total').textContent=money(total/100);
+ document.querySelector('#dock-count').textContent=count?count+(count===1?' item no carrinho':' itens no carrinho'):'Seu carrinho está vazio';
+ document.querySelector('#header-cart-count').textContent=String(count);
+ for(const id of ['open-cart','header-cart'])document.getElementById(id).setAttribute('aria-label','Abrir carrinho, '+count+' itens, '+money(total/100));
+ document.querySelector('#cart-dock').hidden=!available;
+ document.querySelector('#review-order').disabled=!count||!available;
  document.querySelector('#checkout').disabled=!count||!available||!/^55\d{10,11}$/.test(whatsapp);
  if(available&&!whatsapp)feedback.textContent='Esta distribuidora ainda não configurou o WhatsApp para pedidos.';
 }
 function render(){
  const list=products.filter(p=>(p.name+' '+p.brand).toLocaleLowerCase('pt-BR').includes(search.value.toLocaleLowerCase('pt-BR'))&&(!category.value||p.category===category.value));
  const root=document.querySelector('#catalog-products');root.replaceChildren();
- for(const p of list){const card=node('article','','beverage'),media=node('div','','beverage-media');if(p.image&&p.image.startsWith('/api/catalog/image?')){const photo=node('img','','beverage-photo');photo.src=p.image;photo.alt=p.name;photo.loading='lazy';photo.decoding='async';photo.onerror=()=>{photo.remove();media.replaceChildren(node('span','Sem foto','beverage-no-photo'));};media.append(photo);}else media.append(node('span','Sem foto','beverage-no-photo'));card.append(media);for(const [tag,cls,text] of [['span','category',p.category],['h2','',p.name],['p','brand',p.brand],['p','price',money(p.price)]])card.append(node(tag,text,cls));
- const add=node('button','Adicionar ao carrinho','add-cart');add.disabled=!whatsapp;add.onclick=()=>chooseQuantity(p);card.append(add);root.append(card);}
+ for(const name of [...new Set(list.map(p=>p.category))]){
+  const section=node('section','','catalog-section'),heading=node('div','','category-heading');heading.append(node('h2',name));heading.append(node('span',list.filter(p=>p.category===name).length+' opções','category-count'));section.append(heading);
+  const grid=node('div','','beverage-grid');
+  for(const p of list.filter(p=>p.category===name)){const card=node('article','','beverage'),media=node('div','','beverage-media');if(p.image&&p.image.startsWith('/api/catalog/image?')){const photo=node('img','','beverage-photo');photo.src=p.image;photo.alt=p.name;photo.loading='lazy';photo.decoding='async';photo.onerror=()=>{photo.remove();media.replaceChildren(photoPlaceholder());};media.append(photo);}else media.append(photoPlaceholder());card.append(media);for(const [tag,cls,text] of [['span','category',p.units>1?'Embalagem completa':'Unidade'],['h3','',p.name],['p','brand',p.brand||name],['p','price',money(p.price)]])card.append(node(tag,text,cls));
+  const add=node('button','＋ Adicionar','add-cart');add.type='button';add.setAttribute('aria-label','Adicionar '+p.name+' ao carrinho');add.disabled=!whatsapp;add.onclick=()=>chooseQuantity(p);card.append(add);grid.append(card);}
+  section.append(grid);root.append(section);
+ }
+ document.querySelectorAll('[data-category]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.category===category.value)));
  status.textContent=list.length?`${list.length} bebidas disponíveis${whatsapp?'':' · Pedidos pelo WhatsApp ainda não configurados.'}`:products.length?'Nenhuma bebida encontrada. Ajuste os filtros.':'Nenhum produto disponível no momento.';
 }
 async function load(){
@@ -43,8 +58,10 @@ async function load(){
  document.title=result.name+' · Catálogo';document.querySelector('#store-name').textContent=result.name;
  document.querySelector('#store-logo').src=/^data:image\/png;base64,/.test(result.logo)?result.logo:'/assets/logo.svg';
  const selected=category.value;category.replaceChildren(new Option('Todas',''));for(const name of [...new Set(products.map(p=>p.category))])category.add(new Option(name,name));category.value=selected;
+ const shortcuts=document.querySelector('#category-shortcuts');shortcuts.replaceChildren();
+ for(const name of ['',...new Set(products.map(p=>p.category))]){const button=node('button','','category-shortcut');button.type='button';button.dataset.category=name;button.setAttribute('aria-pressed',String(name===category.value));const icon=node('span','','category-icon');icon.setAttribute('aria-hidden','true');icon.innerHTML=categoryIcon(name);button.append(icon,node('span',name||'Todos'));button.onclick=()=>{category.value=name;render();};shortcuts.append(button);}shortcuts.hidden=false;
  document.querySelector('#catalog-filters').hidden=false;document.querySelector('#catalog-note').hidden=false;render();renderCart();return {ok:true,changed};
- }catch(error){available=false;document.querySelector('.brand-scene').hidden=true;products=[];document.querySelector('#catalog-products').replaceChildren();document.querySelector('#catalog-filters').hidden=true;document.querySelector('#catalog-note').hidden=true;status.textContent=error.message;feedback.textContent='Não foi possível confirmar o catálogo. Reconecte e tente novamente.';retry.hidden=false;renderCart();return {ok:false};}
+ }catch(error){available=false;document.querySelector('.brand-scene').hidden=true;products=[];document.querySelector('#catalog-products').replaceChildren();document.querySelector('#catalog-filters').hidden=true;document.querySelector('#category-shortcuts').hidden=true;document.querySelector('#catalog-note').hidden=true;status.textContent=error.message;feedback.textContent='Não foi possível confirmar o catálogo. Reconecte e tente novamente.';retry.hidden=false;renderCart();return {ok:false};}
 }
 const quantityDialog=document.querySelector('#quantity-dialog'),quantityInput=document.querySelector('#add-quantity'),quantityError=document.querySelector('#quantity-error'),quantityButton=document.querySelector('#confirm-quantity');
 let selectedProductId=null,checkingQuantity=false;
@@ -78,7 +95,7 @@ document.querySelector('#quantity-form').onsubmit=async event=>{
  }finally{checkingQuantity=false;quantityInput.disabled=false;quantityButton.textContent='Adicionar ao carrinho';const message=quantityError.textContent;updateQuantity();if(message)quantityError.textContent=message;}
 };
 search.oninput=render;category.onchange=render;retry.onclick=load;
-document.querySelector('#open-cart').onclick=()=>{renderCart();dialog.showModal();};
+for(const id of ['open-cart','header-cart','review-order'])document.getElementById(id).onclick=()=>{renderCart();dialog.showModal();};
 document.querySelector('#close-cart').onclick=()=>dialog.close();
 document.querySelector('#checkout').onclick=async event=>{
  const addressFields=['delivery-neighborhood','delivery-street','delivery-number'].map(id=>document.getElementById(id));
