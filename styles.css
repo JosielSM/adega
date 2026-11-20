@@ -304,3 +304,60 @@ html{touch-action:pan-x pan-y}
 @media(max-width:700px){.purchase-choice{gap:8px}.purchase-choice label{padding:10px 8px;gap:7px}.purchase-choice strong{font-size:13px}.purchase-choice small{font-size:10px}.product-registration input{font-size:16px;min-height:46px}.purchase-choice input{min-height:18px}.product-form-section{margin-bottom:20px;padding-bottom:20px}.product-registration .form-grid{grid-template-columns:1fr}}
 
 .restock-actions{display:flex;align-items:center;gap:10px;flex-shrink:0}.restock-actions button{min-height:44px}.bar-label>span{min-width:0;overflow-wrap:anywhere}@media(max-width:380px){.bar-label:has(.restock-actions){flex-wrap:wrap}.restock-actions{width:100%;justify-content:space-between}}
+
+/* Sales, stock replenishment and printed receipts */
+main section.transaction-picker { min-height: 0; padding: 18px 20px; }
+.transaction-picker label { max-width: 510px; }
+#transaction-search-status { margin: 10px 0; color: var(--muted); }
+#transaction-results { max-height: 16rem; }
+#transaction-results th, #transaction-results td { padding: 10px 12px; }
+#transaction-results thead { position: sticky; top: 0; z-index: 1; }
+#transaction-results tbody th { background: white; color: var(--text); font-size: 13px; font-weight: 700; }
+#transaction-entry h2 { margin-bottom: 16px; overflow-wrap: anywhere; }
+#transaction-error { color: #a74d3c; }
+.receipt-actions { flex-wrap: wrap; }
+
+@media print {
+  body:has(#sale-receipt[open]) > :not(#sale-receipt) { display: none !important; }
+  body:has(#sale-receipt[open]) { padding: 0 !important; background: white; }
+  #sale-receipt[open] { position: static; width: auto; max-width: none; max-height: none; margin: 0; padding: 0; overflow: visible; }
+  #sale-receipt::backdrop, #sale-receipt .receipt-actions { display: none; }
+}
+/* Checkout workstation */
+.pos-cash { margin-bottom: 16px; }
+.pos-cash .actions { align-items: end; }
+.pos-cash label { max-width: 160px; }
+.pos-grid { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+.pos-grid .card { padding: 18px; }
+.pos-grid h2 { margin-bottom: 14px; }
+.pos-products label { margin-bottom: 5px; }
+.pos-grid .table-wrap { max-height: 44vh; }
+.pos-grid table th, .pos-grid table td { padding: 8px; }
+.pos-grid table thead { position: sticky; top: 0; z-index: 1; }
+.pos-grid table td:first-child { white-space: normal; min-width: 86px; }
+.pos-grid td small { display: block; margin-top: 4px; }
+.pos-products td button { margin: 2px; }
+.pos-checkout input[type=number] { min-width: 66px; max-width: 82px; }
+.pos-checkout .form-summary { margin-top: 16px; }
+.pos-checkout > label { margin-top: 12px; }
+#pos-feedback { color: #a74d3c; }
+#pos-finish { width: 100%; }
+#pos-finish:disabled { opacity: .55; cursor: default; }
+.receipt-header { text-align: center; }
+.receipt-header h2 { margin-top: 5px; }
+.receipt-header p { margin-top: 4px; }
+.receipt-meta { overflow-wrap: anywhere; border-top: 1px dashed currentColor; padding: 8px 0; }
+.receipt-items { margin: 0; padding: 8px 0; list-style: none; border-block: 1px dashed currentColor; }
+.receipt-items li { padding: 4px 0; break-inside: avoid; overflow-wrap: anywhere; }
+.receipt-items li div, .receipt-total { display: flex; justify-content: space-between; gap: 6px; }
+.receipt-items li div strong, .receipt-total strong { white-space: nowrap; }
+.receipt-total { margin-top: 9px; font-size: 1.2em; }
+@media (max-width: 1040px) {
+  .pos-grid { grid-template-columns: 1fr; }
+}
+@media print {
+  @page { margin: 0; }
+  #sale-receipt[open] { width: 72mm; margin-inline: auto; color: #000; border-radius: 0; font: 9pt/1.35 ui-monospace, Consolas, monospace; }
+  #sale-receipt[open][data-width="58"] { width: 48mm; }
+  #sale-receipt h2 { font-family: inherit; font-size: 10pt; }
+}

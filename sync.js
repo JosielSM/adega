@@ -8,7 +8,7 @@
   // Never replace a form or filters while the user is interacting with them.
   const editing = () => document.querySelector('dialog[open],details[open]') ||
     document.activeElement?.matches('input,select,textarea') ||
-    document.querySelector('#transaction-form');
+    document.querySelector('#transaction-form,#pos-checkout');
   async function sync() {
     if (navigator.onLine === false) {status.textContent='Offline — dados podem estar desatualizados.';connectionState('offline');return;}
     if (!authenticated || busy || inFlight || document.hidden) return;

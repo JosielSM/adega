@@ -23,7 +23,7 @@
   window.addEventListener('hashchange', close);
   const bottom = document.querySelector('#bottom-navigation');
   const updateBottom = () => {
-    const page = location.hash.slice(1) || 'painel';
+    const page = location.hash.slice(1) || 'vendas';
     bottom.querySelectorAll('[data-bottom-page]').forEach(link => {
       if (link.dataset.bottomPage === page) link.setAttribute('aria-current','page');
       else link.removeAttribute('aria-current');

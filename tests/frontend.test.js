@@ -7,7 +7,7 @@ import { webcrypto } from 'node:crypto';
 test('interface sends commands and reuses request ID after connection failure', async () => {
   const elements = new Map();
   const el = key => {
-    if (!elements.has(key)) elements.set(key, { textContent: '', innerHTML: '', style: {}, close() {}, querySelector() { return { disabled: false }; } });
+    if (!elements.has(key)) elements.set(key, { textContent: '', innerHTML: '', style: {}, focus() {}, showModal() {}, close() {}, querySelector() { return { disabled: false }; } });
     return elements.get(key);
   };
   const calls = [];
@@ -29,7 +29,7 @@ test('interface sends commands and reuses request ID after connection failure', 
   });
   vm.runInContext(await readFile(new URL('../app.js', import.meta.url), 'utf8'), context);
   await new Promise(resolve => setImmediate(resolve));
-  assert.match(el('#content').innerHTML, /Seu negócio em um olhar/);
+  assert.match(el('#content').innerHTML, /<h1>Vendas<\/h1>/);
   fail = true;
   assert.equal(await vm.runInContext("globalThis.source={};saveCommand('movement',{id:'product',type:'sale',quantity:1,price:10},source)", context), false);
   fail = false;
@@ -43,12 +43,37 @@ test('interface sends commands and reuses request ID after connection failure', 
   assert.equal(await stale,false);
   assert.equal(vm.runInContext('db.products.length',context),0,'response from prior account must never replace current data');
   el('#transaction-form').elements={mode:{value:'unit',querySelector:()=>({disabled:false})},quantity:{value:'3'}};
-  vm.runInContext("db.products=[{id:'pack-product',name:'Bebida',active:true,stock:24,pack_size:6,cost:6.666667,price:8,pack_price:40}];transaction('purchase')",context);
+  vm.runInContext("db.products=[{id:'pack-product',name:'Bebida',code:'001234',active:true,stock:24,pack_size:6,cost:6.666667,price:8,pack_price:40}];transaction('purchase')",context);
   el('#transaction-product').value='pack-product';el('#transaction-product').onchange();
   assert.equal(el('#unit-price').value,6.67,'suggested unit cost must fit the cent precision of the form');
   el('#transaction-form').elements.mode.value='pack';el('#transaction-form').elements.mode.onchange();
   assert.equal(el('#unit-price').value,40,'a repeating unit cost must not produce an invalid fractional cent package price');
   assert.match(el('#transaction-stock').textContent,/18 unidades/);
   assert.match(el('#transaction-total').textContent,/120,00/);
+  el('#transaction-search').value='001234';
+  el('#transaction-search').oninput();
+  assert.match(el('#transaction-results').innerHTML, /<th scope="col">Código<\/th>/);
+  let prevented = false;
+  el('#transaction-search').onkeydown({key:'Enter',preventDefault(){prevented=true;}});
+  assert.equal(prevented,true);
+  assert.equal(el('#transaction-product').value,'pack-product');
+  assert.equal(el('#transaction-entry').hidden,false);
+  vm.runInContext("showReceipt({name:'Bebida',party:'<Cliente>',payment:'Pix',quantity:2,price:8,date:new Date()})",context);
+  assert.match(el('#receipt-details').innerHTML,/&lt;Cliente&gt;/);
+  assert.match(el('#receipt-details').innerHTML,/16,00/);
+  vm.runInContext("pointOfSale()",context);
+  el('#pos-search').value='001234';
+  el('#pos-search').onkeydown({key:'Enter',preventDefault(){}});
+  el('#pos-search').value='001234';
+  el('#pos-search').onkeydown({key:'Enter',preventDefault(){}});
+  assert.match(el('#pos-cart').innerHTML,/value="2"/);
+  assert.match(el('#pos-total').textContent,/16,00/);
+  vm.runInContext(`db.movements=[
+    {saleId:'sale-1',name:'Bebida',party:'Ana',quantity:2,price:8,date:new Date()},
+    {saleId:'sale-1',name:'Água',party:'Ana',quantity:1,price:3,date:new Date()}
+  ];showReceipt(db.movements[0]);`,context);
+  assert.match(el('#receipt-details').innerHTML,/Água/);
+  assert.match(el('#receipt-details').innerHTML,/19,00/);
+  assert.equal(vm.runInContext('groupedMovements(db.movements).length',context),1);
   assert.doesNotMatch(vm.runInContext("stockBreakdown({stock:24,pack_size:12,pack_name:'<img src=x>'})",context),/<img/);
 });

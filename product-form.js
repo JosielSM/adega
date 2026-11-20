@@ -3,7 +3,7 @@ function productPurchaseSummary(mode,quantity,size,cost){
  const factor=mode==='pack'?Number(size):1;
  return {units:Number(quantity)*factor,unitCost:Number(cost)/factor,totalCost:Number(quantity)*Number(cost)};
 }
-function productModal(id){
+function productModal(id,onSaved=()=>products()){
  const p=db.products.find(product=>product.id===id)||{name:'',brand:'',code:'',category:'Cervejas',min:5};
  const editing=!!id,packed=Number(p.pack_size)>1;
  const packNames=['Caixa','Grade','Fardo','Pack'];
@@ -41,7 +41,7 @@ function productModal(id){
    <div class="product-photo-card" id="product-pack-photo"><label><span id="product-pack-photo-label">Foto da embalagem</span><input type="file" accept="image/jpeg,image/png,image/webp" data-photo-input="pack"></label><img data-photo-preview="pack" hidden alt="Prévia da foto da embalagem"><button type="button" class="secondary small" data-photo-remove="pack" hidden>Remover foto</button><small data-photo-feedback="pack" role="status"></small></div>
   </div></section>
   <details class="product-extra"><summary>Mais informações <span>Marca, código e alerta de estoque</span></summary><div class="form-grid">
-   ${field('Marca (opcional)','brand',p.brand,'text','maxlength="150"')}${field('Código / código de barras (opcional)','code',p.code,'text','maxlength="150"')}
+   ${field('Marca (opcional)','brand',p.brand,'text','maxlength="150"')}${field('Código de barras (opcional)','code',p.code,'text','maxlength="150" autocomplete="off" placeholder="Escaneie ou digite"')}
    ${field('Avisar quando restarem (unidades)','min',editing?p.min:'','number','min="0" step="1" inputmode="numeric" placeholder="Ex.: 5"')}
 
   </div></details>
@@ -69,6 +69,7 @@ function productModal(id){
   fields.querySelector('#product-box-sale-note').textContent=isBox&&validSize?'Cada '+name+' vendid'+(feminine?'a':'o')+' descontará '+size+' unidades do mesmo estoque.':'';
  }
  // Each opening owns its listener; closing/reopening cannot retain an old product.
+ input('code').onkeydown=event=>{if(event.key==='Enter') event.preventDefault();};
  fields.oninput=update;fields.onchange=update;update();
  form.onsubmit=async event=>{
   event.preventDefault();
@@ -82,7 +83,7 @@ function productModal(id){
   const data={name:values.name.trim(),brand:values.brand.trim(),code:values.code.trim(),category:values.category,cost:editing?purchaseCost:summary.unitCost,price:Number(values.price),min:Number(values.min),pack_size:size,pack_name:isBox?(values.pack_name.trim()||'Caixa'):'Caixa',pack_price:isBox&&values.pack_price?Number(values.pack_price):null};
   if(!data.name)return;
   if(await saveCommand(editing?'update_product':'create_product',{...data,...(imageEditor?.values()||{}),...(editing?{id}:{stock:quantity,stock_mode:isBox?'pack':'unit'})},form)){
-   modal.close();products();toast(editing?'Produto atualizado.':'Produto cadastrado. Estoque calculado automaticamente.');
+   modal.close();onSaved();toast(editing?'Produto atualizado.':'Produto cadastrado. Estoque calculado automaticamente.');
   }
  };
  modal.showModal();input('name').focus();

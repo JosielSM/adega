@@ -63,7 +63,7 @@
         const endpoint={login:'login',cadastro:'auth/signup',recuperar:'auth/recover',redefinir:'auth/password'}[view];
         const result=await api(endpoint,data);
         if (view==='login'||result.authenticated) {
-          sessionGeneration++;accountChannel?.postMessage('signed-in');db={products:[],movements:[]};db=await api('state');authenticated=true;location.hash='painel';render();toast(view==='redefinir'?'Senha atualizada. Bem-vindo à Distribuidora!':'Acesso confirmado. Bem-vindo à Distribuidora!');
+          sessionGeneration++;accountChannel?.postMessage('signed-in');db={products:[],movements:[]};db=await api('state');authenticated=true;clearCash();location.hash='vendas';render();toast(view==='redefinir'?'Senha atualizada. Bem-vindo à Distribuidora!':'Acesso confirmado. Bem-vindo à Distribuidora!');
         } else {feedback(result.message,true);e.target.reset(); if(password)password.dispatchEvent(new Event('input'));}
       } catch(error){feedback(error.message);} finally {setPending(false);}
     };

@@ -49,7 +49,7 @@ export async function authRoute(request, env, { supabase, body, json, cookie, se
       const auth=await supabase(env,'/auth/v1/verify',null,{token_hash:token,type});
       if(!auth.access_token)throw new ApiError(400,'Não foi possível validar este link.');
       if(type==='recovery')return redirect('/#redefinir',recoveryHeaders(auth));
-      return redirect('/#painel',sessionHeaders(request,auth));
+      return redirect('/#vendas',sessionHeaders(request,auth));
     }catch(error){return redirect('/?auth_error='+encodeURIComponent(error.message)+'#recuperar');}
   }
   if(path==='/api/auth/password' && request.method==='POST'){
@@ -87,7 +87,7 @@ export async function authRoute(request, env, { supabase, body, json, cookie, se
         return redirect('/#redefinir',headers);
       }
       sessionHeaders(request,auth).getSetCookie().forEach(value=>headers.append('Set-Cookie',value));
-      return redirect('/#painel',headers);
+      return redirect('/#vendas',headers);
     }catch(error){return redirect('/?auth_error='+encodeURIComponent(error.message)+'#login',headers);}
   }
   return null;
