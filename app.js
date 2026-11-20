@@ -8,11 +8,12 @@ let busy=false;
 let dataRevision=0;
 let renderedPage=null;
 let restockProductId=null;
+let checkoutDraft;
 let sessionGeneration=0;
 const accountChannel=typeof BroadcastChannel==='function'?new BroadcastChannel('adega-access'):null;
 function invalidateAccount(message='Sua sessão mudou em outra aba. Entre novamente.'){sessionGeneration++;authenticated=false;db={products:[],movements:[]};document.querySelector('#modal').close();login(message);}
 if(accountChannel)accountChannel.onmessage=event=>{
- if(event.data==='signed-in'){clearCash();closeReceipt();sessionGeneration++;authenticated=false;db={products:[],movements:[]};document.querySelector('#modal').close();start();}
+ if(event.data==='signed-in'){checkoutDraft=undefined;clearCash();closeReceipt();sessionGeneration++;authenticated=false;db={products:[],movements:[]};document.querySelector('#modal').close();start();}
  else invalidateAccount();
 };
 async function api(path, data) {
@@ -23,7 +24,9 @@ async function api(path, data) {
   if(generation!==sessionGeneration)throw Error('Sessão alterada. Atualize a página e entre novamente.');
   if(!response.ok){
     if(response.status===401&&authenticated){invalidateAccount('Sessão expirada. Entre novamente.');accountChannel?.postMessage('session-changed');}
-    throw Error(result.error||'Não foi possível concluir a operação.');
+    const error = Error(result.error||'Não foi possível concluir a operação.');
+    error.status = response.status;
+    throw error;
   }
   return result;
 }
@@ -33,16 +36,21 @@ async function saveCommand(action,payload,source){
   dataRevision++;
   const signature=JSON.stringify({action,payload});
   if(!source.adegaCommand||source.adegaCommand.signature!==signature)source.adegaCommand={signature,requestId:crypto.randomUUID()};
-  const buttons=[...document.querySelectorAll('button')];
+  const buttons=[...document.querySelectorAll('button:not(:disabled)')];
   buttons.forEach(b=>b.disabled=true);
   try{
     db=await api('command',{action,payload,requestId:source.adegaCommand.requestId});
     delete source.adegaCommand;
     return true;
-  }catch(error){toast(error.message);return false;}
+  }catch(error){
+    if(action==='checkout' && error.status===400) delete source.adegaCommand;
+    source.adegaError = error.message;
+    toast(error.message);return false;
+  }
   finally{busy=false;buttons.forEach(b=>b.disabled=false);}
 }
 function login(message=''){
+  checkoutDraft=undefined;
   clearCash();
   closeReceipt();
   restockProductId=null;
@@ -181,6 +189,7 @@ function showReceipt(sale){
 
 function pointOfSale(){
   const cash = savedCash();
+  const draft = checkoutDraft ??= {items:[],party:'',payment:'Pix',pending:null};
   content.innerHTML = heading('Vendas','', '<button class="secondary" type="button" id="pos-new-product">Cadastrar produto</button>') + `
     <div class="pos-cash">
       <form id="pos-cash" class="actions">
@@ -201,7 +210,7 @@ function pointOfSale(){
         <h2>Venda atual</h2>
         <div id="pos-cart" class="table-wrap"></div>
         <div class="form-summary"><span>Total a pagar</span><strong id="pos-total" aria-live="polite">${money(0)}</strong></div>
-        ${field('Nome do cliente','party','','text','required maxlength="150" autocomplete="off"')}
+        ${field('Nome do cliente','party',draft.party,'text','required maxlength="150" autocomplete="off"')}
         <label>Pagamento<select name="payment"><option>Pix</option><option>Dinheiro</option><option>Cartão de débito</option><option>Cartão de crédito</option></select></label>
         <p id="pos-feedback" role="alert"></p>
         <button id="pos-finish" type="submit">Finalizar venda e gerar comprovante</button>
@@ -213,10 +222,15 @@ function pointOfSale(){
   const results = find('#pos-results');
   const cart = find('#pos-cart');
   const feedback = find('#pos-feedback');
-  const items = [];
+  const items = draft.items;
+  if(form.elements) form.elements.payment.value = draft.payment;
   const normalized = value=>String(value ?? '').normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase();
   const activeProducts = ()=>db.products.filter(product=>product.active);
 
+  form.oninput = event=>{
+    if(event.target.name==='party') draft.party = event.target.value;
+    if(event.target.name==='payment') draft.payment = event.target.value;
+  };
   find('#pos-new-product').onclick = ()=>productModal(undefined,paintResults);
   find('#pos-cash').onsubmit = event=>{
     event.preventDefault();
@@ -259,6 +273,7 @@ function pointOfSale(){
     const cents = items.reduce((sum,item)=>sum+item.quantity*Math.round(item.price*100),0);
     find('#pos-total').textContent = money(cents/100);
     find('#pos-finish').disabled = !items.length;
+    find('#pos-finish').textContent = draft.pending?'Confirmar situação da venda':'Finalizar venda e gerar comprovante';
   }
   function setQuantity(item, quantity){
     const product = activeProducts().find(p=>p.id===item.id);
@@ -273,7 +288,7 @@ function pointOfSale(){
     return true;
   }
   function addProduct(product,mode){
-    if(!product || busy) return;
+    if(!product || busy || draft.pending) return;
     let item = items.find(line=>line.id===product.id && line.mode===mode);
     const existing = Boolean(item);
     const price = Number(mode==='pack'?product.pack_price:product.price);
@@ -308,14 +323,14 @@ function pointOfSale(){
   cart.onchange = event=>{
     const input = event.target;
     const item = items[input.dataset.quantity];
-    if(!item || busy) return;
+    if(!item || busy || draft.pending) return;
     if(!setQuantity(item,input.valueAsNumber)) input.value = item.quantity;
     input.closest('tr').querySelector('[data-line-total]').textContent = money(item.quantity*item.price);
     updateTotal();
   };
   cart.onclick = event=>{
     const button = event.target.closest('[data-remove]');
-    if(!button || busy) return;
+    if(!button || busy || draft.pending) return;
     items.splice(Number(button.dataset.remove),1);
     feedback.textContent = '';
     paintCart();
@@ -324,24 +339,56 @@ function pointOfSale(){
   form.onsubmit = async event=>{
     event.preventDefault();
     if(busy || !items.length) return;
-    const party = form.elements.party.value.trim();
+    const party = draft.pending?.payload.party ?? form.elements.party.value.trim();
     if(!party){feedback.textContent='Informe o nome do cliente.';form.elements.party.focus();return;}
     const payment = form.elements.payment.value;
-    const payload = {party,payment,items:items.map(({id,mode,quantity,price})=>({id,mode,quantity,price}))};
+    const payload = draft.pending?.payload ?? {party,payment,items:items.map(({id,mode,quantity,price})=>({id,mode,quantity,price}))};
+    if(draft.pending) form.adegaCommand = draft.pending.command;
     const submission = saveCommand('checkout',payload,form);
-    const id = form.adegaCommand?.requestId;
-    if(!await submission || !form.isConnected) return;
-    const lines = db.movements.filter(m=>m.saleId===id);
-    items.length = 0;
-    form.reset();
+    const command = form.adegaCommand;
+    draft.pending = {payload,command};
+    setCheckoutEditing(false);
+    feedback.textContent = 'Confirmando venda…';
+    const saved = await submission;
+    draft.pending = !saved && form.adegaCommand ? {payload,command} : null;
+    if(saved){
+      items.length = 0;
+      draft.party = '';
+      draft.payment = 'Pix';
+    }
+    const activeForm = find('#pos-checkout');
+    if(activeForm && activeForm!==form && checkoutDraft===draft){
+      render();
+      return;
+    }
+    if(!form.isConnected) return;
+    setCheckoutEditing(!draft.pending);
+    if(!saved){
+      feedback.textContent = draft.pending
+        ? 'A confirmação foi interrompida. Verifique a situação da mesma venda antes de editar os itens.'
+        : form.adegaError;
+      updateTotal();
+      return;
+    }
+    form.elements.party.value = '';
+    form.elements.payment.value = 'Pix';
+    feedback.textContent = '';
     paintCart();
     paintResults();
     search.focus();
+    const lines = db.movements.filter(m=>m.saleId===command.requestId);
     if(lines.length) showReceipt(lines[0]);
     toast('Venda registrada.');
   };
+  function setCheckoutEditing(enabled){
+    for(const control of form.querySelectorAll('input,select,[data-remove]')) control.disabled = !enabled;
+  }
   paintResults();
   paintCart();
+  if(draft.pending){
+    setCheckoutEditing(false);
+    feedback.textContent = 'Verifique a situação da venda pendente.';
+  }
   search.focus();
 }
 

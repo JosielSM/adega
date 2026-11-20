@@ -156,3 +156,21 @@ test('product commands allow two optimized photos but reject executable or overs
  assert.equal((await worker.fetch(post('command',command,{cookie:'adega_session=a'}),env)).status,200);
  for(const bad of ['data:image/svg+xml;base64,AAAA','x'.repeat(65537)])assert.equal((await worker.fetch(post('command',{...command,payload:{unit_image:bad}},{cookie:'adega_session=a'}),env)).status,400);
 });
+
+test('checkout forwards the entire sale using the current account token and request ID', async t => {
+  const requestId = '12345678-1234-1234-1234-123456789012';
+  const payload = {
+    party: 'Cliente teste',
+    payment: 'Pix',
+    items: [{id:'item-a',mode:'unit',quantity:2,price:8}, {id:'item-b',mode:'pack',quantity:1,price:42}]
+  };
+  t.mock.method(globalThis, 'fetch', async (url, options) => {
+    assert.match(url, /rpc\/adega_checkout$/);
+    assert.equal(options.headers.Authorization, 'Bearer user-token');
+    assert.deepEqual(JSON.parse(options.body), {p_payload:payload,p_request_id:requestId});
+    return Response.json({products:[],movements:[{saleId:requestId}]});
+  });
+  const response = await worker.fetch(post('command', {action:'checkout',payload,requestId}, {cookie:'adega_session=user-token'}), env);
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).movements[0].saleId, requestId);
+});

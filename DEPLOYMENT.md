@@ -77,3 +77,9 @@ Em 18/10/2026, após solicitação e confirmação explícita do proprietário, 
 ## Cancelamento de vendas
 
 Versão ba77691a-2167-48a8-9902-65cb59e593fa. Migração 007 aplicada com sucesso após renovar sessão administrativa expirada. Venda cancelada permanece no histórico com data/status, devolve quantidade ao estoque com custo histórico ponderado e deixa de entrar nos indicadores. Confirmação informa que não há estorno de pagamento. Trinta e três testes passaram no conjunto completo; teste adicional da API de cancelamento também passou. Não houve cancelamento de venda real em produção.
+
+## Publicação do caixa com venda de vários itens
+
+Aplique `supabase/migrations/012_checkout.sql` depois da migração 011, antes de publicar o Worker que usa o novo caixa. A migração agrupa os itens das novas vendas pelo identificador da operação e mantém compatíveis as movimentações anteriores. Uma instalação nova deve aplicar todas as migrações em ordem.
+
+Depois de publicar, valide com uma venda de teste em um ambiente de homologação. Confira o estoque, a segunda via em Movimentações e a prévia de impressão com o tamanho de papel definido no driver da impressora (58 ou 80 mm).
