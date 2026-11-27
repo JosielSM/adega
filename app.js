@@ -13,7 +13,7 @@ let sessionGeneration=0;
 const accountChannel=typeof BroadcastChannel==='function'?new BroadcastChannel('adega-access'):null;
 function invalidateAccount(message='Sua sessão mudou em outra aba. Entre novamente.'){sessionGeneration++;authenticated=false;db={products:[],movements:[]};document.querySelector('#modal').close();login(message);}
 if(accountChannel)accountChannel.onmessage=event=>{
- if(event.data==='signed-in'){checkoutDraft=undefined;clearCash();closeReceipt();sessionGeneration++;authenticated=false;db={products:[],movements:[]};document.querySelector('#modal').close();start();}
+ if(event.data==='signed-in'){checkoutDraft=undefined;closeReceipt();sessionGeneration++;authenticated=false;db={products:[],movements:[]};document.querySelector('#modal').close();start();}
  else invalidateAccount();
 };
 async function api(path, data) {
@@ -51,7 +51,6 @@ async function saveCommand(action,payload,source){
 }
 function login(message=''){
   checkoutDraft=undefined;
-  clearCash();
   closeReceipt();
   restockProductId=null;
   document.body.classList.add('auth-mode');
@@ -138,13 +137,6 @@ function deleteProductModal(id){
  modal.showModal();document.querySelector('#cancel-modal').focus();
 }
 function field(label,name,value='',type='text',extra=''){return `<label>${label}<input name="${name}" type="${type}" value="${esc(value)}" ${extra}></label>`}
-const cashKey = 'adega-opening-cash';
-function clearCash(){
-  try { window.sessionStorage?.removeItem(cashKey); } catch { /* Storage is optional. */ }
-}
-function savedCash(){
-  try { return window.sessionStorage?.getItem(cashKey) ?? ''; } catch { return ''; }
-}
 function closeReceipt(){
   document.querySelector('#sale-receipt').close();
   document.querySelector('#receipt-details').innerHTML = '';
@@ -176,7 +168,8 @@ function showReceipt(sale){
       </div></li>`;
     }).join('')}</ul>
     <div class="receipt-total"><strong>Total</strong><strong>${money(total)}</strong></div>
-    <p>${sale.payment==='A receber'?'Saldo a receber: '+money(total):'Pagamento: '+esc(sale.payment || 'Não informado')}</p>
+    <p>${sale.payment==='A receber'?'Saldo a receber: '+money(outstanding({...sale,lineTotal:total})):'Pagamento: '+esc(sale.payment || 'Não informado')}</p>
+    ${receivedFor(sale.saleId).map(p=>`<p>${date(p.received_at)} · ${esc(p.method)} · ${money(p.amount)}</p>`).join('')}
     ${sale.paidAt?`<p>Recebido em ${date(sale.paidAt)}</p>`:''}`;
   const dialog = document.querySelector('#sale-receipt');
   const width = document.querySelector('#receipt-width');
@@ -211,6 +204,12 @@ function customerModal(){
   };
   modal.showModal();
 }
+function receivedFor(saleId){
+  return (db.payments || []).filter(payment=>payment.sale_id===saleId);
+}
+function outstanding(sale){
+  return (Math.round(movementTotal(sale)*100)-receivedFor(sale.saleId).reduce((sum,p)=>sum+Math.round(p.amount*100),0))/100;
+}
 function receivablesModal(){
   const modal = document.querySelector('#modal');
   const form = document.querySelector('#modal-form');
@@ -223,50 +222,111 @@ function receivablesModal(){
   submit.textContent = 'Registrar recebimento';
   fields.innerHTML = `<label>Buscar por cliente ou referência<input id="open-sales-search" type="search" autocomplete="off"></label>
     <div id="open-sales-results" class="table-wrap"></div>
+    <p id="open-sales-summary" role="status"></p>
+    ${field('Valor a receber (R$)','amount','','number','required min="0.01" step="0.01"')}
     <label>Forma de recebimento<select name="method"><option>Pix</option><option>Dinheiro</option><option>Cartão de débito</option><option>Cartão de crédito</option></select></label>`;
   const search = fields.querySelector('#open-sales-search');
   const results = fields.querySelector('#open-sales-results');
   const paint = ()=>{
     const term = search.value.trim().toLowerCase();
     const rows = pending.filter(m=>[m.party,m.saleId].some(value=>value.toLowerCase().includes(term)));
-    results.innerHTML = rows.length?`<table><thead><tr><th>Selecionar</th><th>Cliente</th><th>Data</th><th>Total</th></tr></thead><tbody>${rows.map(m=>`<tr>
-      <td><input type="radio" name="ticket" value="${esc(m.saleId)}" aria-label="Venda de ${esc(m.party)}, ${money(movementTotal(m))}"></td>
-      <td>${esc(m.party)}<small> · ${esc(m.saleId.slice(0,8))}</small></td><td>${date(m.date)}</td><td>${money(movementTotal(m))}</td>
+    results.innerHTML = rows.length?`<table><thead><tr><th>Selecionar</th><th>Cliente</th><th>Data</th><th>Saldo</th></tr></thead><tbody>${rows.map(m=>`<tr>
+      <td><input type="radio" name="ticket" value="${esc(m.saleId)}" aria-label="Venda de ${esc(m.party)}, ${money(outstanding(m))}"></td>
+      <td>${esc(m.party)}<small> · ${esc(m.saleId.slice(0,8))}</small></td><td>${date(m.date)}</td><td>${money(outstanding(m))}</td>
     </tr>`).join('')}</tbody></table>`:'<p>Nenhuma venda em aberto encontrada.</p>';
   };
-  search.oninput = paint;
+  search.oninput = ()=>{paint();form.elements.amount.value='';fields.querySelector('#open-sales-summary').textContent='';};
+  results.onchange = event=>{
+    const selected=pending.find(row=>row.saleId===event.target.value);
+    if(!selected) return;
+    const amount=outstanding(selected);
+    form.elements.amount.value=amount.toFixed(2);
+    form.elements.amount.max=amount;
+    const sameCustomer=row=>selected.customerId?row.customerId===selected.customerId:!row.customerId && row.party.toLowerCase()===selected.party.toLowerCase();
+    const balance=pending.filter(sameCustomer).reduce((sum,row)=>sum+outstanding(row),0);
+    fields.querySelector('#open-sales-summary').textContent='Saldo do cliente nas notas em aberto: '+money(balance);
+  };
   paint();
   form.onsubmit = async event=>{
     event.preventDefault();
     const id = fields.querySelector('input[name=ticket]:checked')?.value;
     if(!id){document.querySelector('#form-error').textContent='Selecione uma venda em aberto.';return;}
-    if(await saveCommand('receive_sale',{id,payment:form.elements.method.value},form)){
+    const amount=form.elements.amount.valueAsNumber;
+    if(!Number.isFinite(amount) || amount<=0) return;
+    if(await saveCommand('receive_sale',{id,payment:form.elements.method.value,amount},form)){
       modal.close();
       const sale = db.movements.find(m=>m.saleId===id);
+      const expected=document.querySelector('#pos-expected');
+      if(expected) expected.textContent=money(db.cashExpected);
       if(sale) showReceipt(sale);
       toast('Recebimento registrado.');
-    }
+    } else document.querySelector('#form-error').textContent=form.adegaError;
   };
   modal.showModal();
 }
 
+
+function counterModal(title,body,submitLabel,onSubmit){
+  const modal=document.querySelector('#modal');
+  const form=document.querySelector('#modal-form');
+  document.querySelector('#modal-title').textContent=title;
+  document.querySelector('#modal-fields').innerHTML=body;
+  document.querySelector('#form-error').textContent='';
+  form.querySelector('button[type=submit]').textContent=submitLabel;
+  form.onsubmit=event=>{event.preventDefault();onSubmit(form,modal);};
+  modal.showModal();
+}
+function cashShiftModal(){
+  const shift=(db.cashShifts || []).find(row=>!row.closed_at);
+  const recent=(db.cashShifts || []).find(row=>row.closed_at);
+  const details=shift?`<p>Inicial <strong>${money(shift.opening)}</strong> · Esperado <strong>${money(db.cashExpected)}</strong></p>`:'';
+  const previous=recent?`<p>Último fechamento em ${date(recent.closed_at)}. Esperado ${money(recent.expected)}, contado ${money(recent.counted)}, diferença ${money(recent.counted-recent.expected)}.</p>`:'';
+  counterModal(shift?'Fechar caixa':'Abrir caixa',details+field(shift?'Valor contado (R$)':'Valor inicial (R$)','amount','','number','required min="0" step="0.01"')+previous,
+    shift?'Confirmar fechamento':'Confirmar abertura',async(form,modal)=>{
+      const amount=form.elements.amount.valueAsNumber;
+      if(!Number.isFinite(amount)) return;
+      if(await saveCommand(shift?'cash_close':'cash_open',{amount,...(shift?{id:shift.id}:{})},form)){
+        modal.close();render();toast(shift?'Fechamento registrado.':'Caixa aberto.');
+      } else document.querySelector('#form-error').textContent=form.adegaError;
+    });
+}
+function suspendedSalesModal(draft){
+  const sales=db.suspended || [];
+  counterModal('Pré-vendas suspensas',`<label>Pré-venda<select name="ticket" required><option value="">${sales.length?'Selecione uma pré-venda':'Nenhuma pré-venda suspensa'}</option>
+    ${sales.map(sale=>`<option value="${esc(sale.id)}">${esc(sale.payload.party || 'Balcão')} · ${date(sale.created_at)} · ${sale.payload.items.length} linhas</option>`).join('')}</select></label>`,
+    'Retomar pré-venda',(form,modal)=>{
+      if(draft.items.length || draft.pending){document.querySelector('#form-error').textContent='Suspenda ou finalize a venda atual antes de retomar outra.';return;}
+      const sale=sales.find(row=>row.id===form.elements.ticket.value);
+      if(!sale) return;
+      const items=sale.payload.items.map(item=>{
+        const product=db.products.find(p=>p.id===item.id && p.active);
+        const mode=item.mode==='pack'?'pack':'unit';
+        const price=Number(mode==='pack'?product?.pack_price:product?.price);
+        const quantity=Number(item.quantity);
+        if(!product || !(price>0) || !Number.isSafeInteger(quantity) || quantity<1) return null;
+        return {id:product.id,mode,price,quantity,name:product.name,label:mode==='pack'?(product.pack_name || 'Caixa'):'Unidade'};
+      });
+      if(items.some(item=>!item)){document.querySelector('#form-error').textContent='Um produto da pré-venda está indisponível.';return;}
+      Object.assign(draft,{items,party:String(sale.payload.party || ''),customerId:String(sale.payload.customerId || ''),payment:sale.payload.payment,suspendedId:sale.id,tender:'',pending:null});
+      modal.close();render();
+    });
+}
+
 function pointOfSale(){
-  const cash = savedCash();
-  const draft = checkoutDraft ??= {items:[],party:'',customerId:'',payment:'Pix',pending:null};
+  const shift = (db.cashShifts || []).find(row=>!row.closed_at);
+  const draft = checkoutDraft ??= {items:[],party:'',customerId:'',payment:'Pix',tender:'',suspendedId:'',pending:null};
   content.innerHTML = '<div class="pos-toolbar">' + heading('Vendas','', '<div class="actions"><button class="secondary" id="pos-customers">Clientes</button><button class="secondary" id="pos-receivables">Em aberto</button></div>') + `
-    <div class="pos-cash">
-      <form id="pos-cash" class="actions">
-        ${field('Caixa inicial (R$)','amount',cash,'number','required min="0" max="9999999999.99" step="0.01"')}
-        <button class="secondary">Salvar</button>
-        <span id="pos-cash-status" role="status"></span>
-      </form>
+    <div class="actions pos-shift">
+      <button class="secondary" id="pos-shift" type="button">${shift?'Fechar caixa':'Abrir caixa'}</button>
+      ${shift?`<span>Saldo esperado <strong id="pos-expected">${money(db.cashExpected)}</strong></span>`:''}
+      <button class="secondary" id="pos-suspended" type="button">Pré-vendas</button>
     </div>
     </div>
     <div class="pos-grid">
       <div class="card pos-products">
         <div class="pos-panel-title"><h2>Produtos</h2><button class="secondary small" type="button" id="pos-new-product">Cadastrar produto</button></div>
         <label for="pos-search">Código de barras ou nome</label>
-        <input id="pos-search" type="search" autocomplete="off" placeholder="Escaneie ou digite para buscar">
+        <input id="pos-search" type="search" autocomplete="off" aria-keyshortcuts="Escape" placeholder="Escaneie ou digite para buscar">
         <p id="pos-search-status" role="status"></p>
         <div id="pos-results" class="table-wrap"></div>
       </div>
@@ -280,7 +340,10 @@ function pointOfSale(){
         <label>Pagamento<select name="payment"><option>Pix</option><option>Dinheiro</option><option>Cartão de débito</option><option>Cartão de crédito</option><option>A receber</option></select></label>
         </div>
         <p id="pos-feedback" role="alert"></p>
-        <button id="pos-finish" type="submit">Finalizar venda e gerar comprovante</button>
+        <div id="pos-tender" hidden>${field('Valor recebido (R$)','tender',draft.tender,'number','min="0" step="0.01"')}
+          <strong id="pos-change" aria-live="polite"></strong>
+        </div>
+        <div class="actions pos-final"><button id="pos-suspend" class="secondary" type="button">Suspender</button><button id="pos-finish" type="submit" aria-keyshortcuts="F9" title="Atalho F9">Finalizar venda e gerar comprovante</button></div>
       </form>
     </div>`;
   const find = selector=>document.querySelector(selector);
@@ -301,6 +364,7 @@ function pointOfSale(){
   const activeProducts = ()=>db.products.filter(product=>product.active);
 
   form.oninput = event=>{
+    if(event.target.name==='tender'){draft.tender=event.target.value;updateTotal();}
     if(event.target.name==='party') draft.party = event.target.value;
     if(event.target.name==='payment'){
       draft.payment = event.target.value;
@@ -315,17 +379,23 @@ function pointOfSale(){
     }
   };
   find('#pos-new-product').onclick = ()=>productModal(undefined,paintResults);
-  find('#pos-cash').onsubmit = event=>{
-    event.preventDefault();
-    const amount = event.currentTarget.elements.amount.valueAsNumber;
-    if(!Number.isFinite(amount) || amount<0) return;
-    const status = find('#pos-cash-status');
-    try {
-      window.sessionStorage.setItem(cashKey,amount.toFixed(2));
-      status.textContent = 'Salvo nesta aba.';
-      search.focus();
-    } catch { status.textContent = 'Não foi possível salvar nesta aba.'; }
+  find('#pos-shift').onclick=cashShiftModal;
+  find('#pos-suspended').onclick=()=>suspendedSalesModal(draft);
+  find('#pos-suspend').onclick=async event=>{
+    if(busy || draft.pending || !items.length || draft.suspendedId) return;
+    const payload={party:draft.party,customerId:draft.customerId,payment:draft.payment,items};
+    if(await saveCommand('suspend_sale',payload,event.currentTarget)){
+      checkoutDraft=undefined;
+      render();toast('Pré-venda suspensa. Estoque disponível.');
+    }
   };
+  function checkoutShortcut(event){
+    if(event.key==='F9'){event.preventDefault();form.requestSubmit();return true;}
+    if(event.key==='F4' && items.length && !draft.pending){event.preventDefault();const quantity=cart.querySelector('[data-quantity]');quantity?.focus();quantity?.select();return true;}
+    if(event.key==='Escape'){event.preventDefault();search.focus();return true;}
+    return false;
+  }
+  form.onkeydown=checkoutShortcut;
 
   function matches(){
     const term = normalized((search.value || '').trim());
@@ -347,7 +417,7 @@ function pointOfSale(){
   function paintCart(){
     cart.innerHTML = items.length?`<table><thead><tr><th>Item</th><th>Qtd.</th><th>Subtotal</th><th>Remover</th></tr></thead>
       <tbody>${items.map((item,index)=>`<tr><td><strong>${esc(item.name)}</strong><small>${esc(item.label)} · ${money(item.price)}</small></td>
-        <td><input type="number" min="1" step="1" required value="${item.quantity}" data-quantity="${index}" aria-label="Quantidade de ${esc(item.name)} em ${esc(item.label)}"></td>
+        <td><input type="number" min="1" step="1" required value="${item.quantity}" data-quantity="${index}" title="F4 para editar a quantidade do primeiro item" aria-label="Quantidade de ${esc(item.name)} em ${esc(item.label)}"></td>
         <td data-line-total>${money(item.quantity*item.price)}</td>
         <td><button type="button" class="secondary small" data-remove="${index}" aria-label="Remover ${esc(item.name)} em ${esc(item.label)}">×</button></td></tr>`).join('')}</tbody></table>`:'<p>Nenhum item adicionado.</p>';
     updateTotal();
@@ -355,6 +425,11 @@ function pointOfSale(){
   function updateTotal(){
     const cents = items.reduce((sum,item)=>sum+item.quantity*Math.round(item.price*100),0);
     find('#pos-total').textContent = money(cents/100);
+    const cashPayment=draft.payment==='Dinheiro';
+    find('#pos-tender').hidden=!cashPayment;
+    const change=Math.round(Number(draft.tender)*100)-cents;
+    find('#pos-change').textContent=cashPayment && draft.tender!=='' && change>=0?'Troco '+money(change/100):'';
+    find('#pos-suspend').disabled=!items.length || Boolean(draft.pending || draft.suspendedId);
     find('#pos-count').textContent = items.reduce((sum,item)=>sum+item.quantity,0)+' itens';
     find('#pos-finish').disabled = !items.length;
     find('#pos-finish').textContent = draft.pending?'Confirmar situação da venda':draft.payment==='A receber'?'Salvar nota em aberto':'Finalizar venda e gerar comprovante';
@@ -390,6 +465,7 @@ function pointOfSale(){
   }
   search.oninput = paintResults;
   search.onkeydown = event=>{
+    if(checkoutShortcut(event)) return;
     if(event.key!=='Enter' || event.isComposing) return;
     event.preventDefault();
     const term = normalized(search.value.trim());
@@ -426,7 +502,12 @@ function pointOfSale(){
     const party = draft.pending?.payload.party ?? form.elements.party.value.trim();
     if(!party){feedback.textContent='Informe o nome do cliente.';form.elements.party.focus();return;}
     const payment = form.elements.payment.value;
-    const payload = draft.pending?.payload ?? {party,payment,customerId:draft.customerId,items:items.map(({id,mode,quantity,price})=>({id,mode,quantity,price}))};
+    const tender=payment==='Dinheiro' && draft.tender?Number(draft.tender):null;
+    const total=items.reduce((sum,item)=>sum+item.quantity*Math.round(item.price*100),0)/100;
+    if(!draft.pending && payment==='Dinheiro' && (tender===null || !Number.isFinite(tender) || tender<total)){
+      feedback.textContent='Informe um valor recebido igual ou superior ao total.';form.elements.tender.focus();return;
+    }
+    const payload = draft.pending?.payload ?? {party,payment,tender,suspendedId:draft.suspendedId,customerId:draft.customerId,items:items.map(({id,mode,quantity,price})=>({id,mode,quantity,price}))};
     if(draft.pending) form.adegaCommand = draft.pending.command;
     const submission = saveCommand('checkout',payload,form);
     const command = form.adegaCommand;
@@ -440,6 +521,8 @@ function pointOfSale(){
       draft.party = '';
       draft.customerId = '';
       draft.payment = 'Pix';
+      draft.tender = '';
+      draft.suspendedId = '';
     }
     const activeForm = find('#pos-checkout');
     if(activeForm && activeForm!==form && checkoutDraft===draft){
@@ -455,6 +538,7 @@ function pointOfSale(){
       updateTotal();
       return;
     }
+    form.elements.tender.value = '';
     form.elements.party.value = '';
     form.elements.party.readOnly = false;
     form.elements.customerId.value = '';
@@ -465,6 +549,8 @@ function pointOfSale(){
     search.focus();
     const lines = db.movements.filter(m=>m.saleId===command.requestId);
     if(lines.length) showReceipt(lines[0]);
+    const expected=find('#pos-expected');
+    if(expected) expected.textContent=money(db.cashExpected);
     toast(payment==='A receber'?'Nota em aberto registrada.':'Venda registrada.');
   };
   function setCheckoutEditing(enabled){

@@ -83,3 +83,9 @@ Versão ba77691a-2167-48a8-9902-65cb59e593fa. Migração 007 aplicada com sucess
 Aplique `supabase/migrations/012_checkout.sql` depois da migração 011, antes de publicar o Worker que usa o novo caixa. A migração agrupa os itens das novas vendas pelo identificador da operação e mantém compatíveis as movimentações anteriores. Uma instalação nova deve aplicar todas as migrações em ordem.
 
 Depois de publicar, valide com uma venda de teste em um ambiente de homologação. Confira o estoque, a segunda via em Movimentações e a prévia de impressão com o tamanho de papel definido no driver da impressora (58 ou 80 mm).
+
+## Publicação do caixa com turnos e recebimentos parciais
+
+Aplique `014_counter.sql` após `013_receivables.sql` e antes de publicar o Worker. A migração mantém os recebimentos antigos nas movimentações e registra os novos em um histórico por venda. Pré-vendas suspensas não reservam estoque. O fechamento de caixa registra o saldo esperado e o valor contado, e o cancelamento de uma venda desconta do cálculo o dinheiro a devolver. O sistema registra os valores informados pelo operador e não realiza transferências ou estornos.
+
+Teste de balcão: abra um caixa com valor conhecido. Faça uma venda em dinheiro com troco, suspenda e retome outra venda, registre um pagamento parcial e confirme a diferença no fechamento. Confira os atalhos Esc (voltar à busca), F4 (quantidade do primeiro item) e F9 (finalizar), além do leitor e da bobina no computador de operação.

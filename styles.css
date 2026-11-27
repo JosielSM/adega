@@ -450,3 +450,13 @@ main > #content:has(.pos-grid) {
   .pos-grid { grid-template-columns: minmax(0,1fr); }
   .pos-grid .table-wrap { max-height: 26dvh; }
 }
+
+.pos-final { flex-wrap: nowrap; margin-top: 10px; }
+.pos-final #pos-finish { flex: 1; width: auto; margin: 0; }
+.pos-final button:disabled { opacity: .55; }
+#pos-tender:not([hidden]) { display: flex; gap: 12px; align-items: end; margin-top: 8px; }
+#pos-tender label { margin: 0; }
+#pos-tender input { margin-top: 4px; }
+#pos-change { padding-bottom: 10px; }
+.pos-shift { align-items: center; }
+.pos-shift span { font-size: .85rem; }
