@@ -253,13 +253,14 @@ function receivablesModal(){
 function pointOfSale(){
   const cash = savedCash();
   const draft = checkoutDraft ??= {items:[],party:'',customerId:'',payment:'Pix',pending:null};
-  content.innerHTML = heading('Vendas','', '<div class="actions"><button class="secondary" id="pos-customers">Clientes</button><button class="secondary" id="pos-receivables">Em aberto</button></div>') + `
+  content.innerHTML = '<div class="pos-toolbar">' + heading('Vendas','', '<div class="actions"><button class="secondary" id="pos-customers">Clientes</button><button class="secondary" id="pos-receivables">Em aberto</button></div>') + `
     <div class="pos-cash">
       <form id="pos-cash" class="actions">
         ${field('Caixa inicial (R$)','amount',cash,'number','required min="0" max="9999999999.99" step="0.01"')}
         <button class="secondary">Salvar</button>
         <span id="pos-cash-status" role="status"></span>
       </form>
+    </div>
     </div>
     <div class="pos-grid">
       <div class="card pos-products">
@@ -273,9 +274,11 @@ function pointOfSale(){
         <div class="pos-panel-title"><h2>Itens da venda</h2><span id="pos-count" aria-live="polite">0 itens</span></div>
         <div id="pos-cart" class="table-wrap"></div>
         <div class="form-summary"><span>Total a pagar</span><strong id="pos-total" aria-live="polite">${money(0)}</strong></div>
+        <div class="pos-payment-fields">
         <label>Vincular cliente<select name="customerId"><option value="">Digitar nome</option>${(db.customers || []).map(c=>`<option value="${esc(c.id)}">${esc(c.name)}${c.phone?' · '+esc(c.phone):''}</option>`).join('')}</select></label>
         ${field('Nome do cliente','party',draft.party,'text','required maxlength="150" autocomplete="off"')}
         <label>Pagamento<select name="payment"><option>Pix</option><option>Dinheiro</option><option>Cartão de débito</option><option>Cartão de crédito</option><option>A receber</option></select></label>
+        </div>
         <p id="pos-feedback" role="alert"></p>
         <button id="pos-finish" type="submit">Finalizar venda e gerar comprovante</button>
       </form>
