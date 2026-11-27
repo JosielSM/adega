@@ -578,8 +578,8 @@ function transaction(){
       <p id="transaction-search-status" role="status"></p>
       <div id="transaction-results" class="table-wrap" tabindex="0" aria-label="Resultados da pesquisa"></div>
     </section>
-    <div class="form-card card" id="transaction-entry" hidden>
-      <h2 id="transaction-selected"></h2>
+    <dialog id="transaction-entry" aria-labelledby="transaction-selected">
+      <div class="modal-heading"><h2 id="transaction-selected"></h2><button id="close-transaction" class="icon-button" type="button" aria-label="Fechar reposição">×</button></div>
       <form id="transaction-form">
         <input name="product" type="hidden" id="transaction-product">
         <div class="form-grid">
@@ -591,15 +591,19 @@ function transaction(){
         <div class="form-summary"><span>Total da compra</span><strong id="transaction-total">${money(0)}</strong></div>
         <p id="transaction-stock" class="note" aria-live="polite"></p>
         <p id="transaction-error" role="alert"></p>
-        <button type="submit">Confirmar reposição</button>
+        <div class="modal-actions"><button id="cancel-transaction" type="button" class="secondary">Cancelar</button><button type="submit">Confirmar reposição</button></div>
       </form>
-    </div>`:`<div class="card">${empty('Cadastre um produto antes de registrar movimentações.')}</div>`);
+    </dialog>`:`<div class="card">${empty('Cadastre um produto antes de registrar movimentações.')}</div>`);
   queryElement('#transaction-new-product').onclick = ()=>productModal(undefined,()=>{
     if(location.hash==='#compras') transaction();
   });
   if(!list.length) return;
 
+  const dialog = queryElement('#transaction-entry');
   const form = queryElement('#transaction-form');
+  const close = ()=>{if(!busy) dialog.close();};
+  queryElement('#close-transaction').onclick = queryElement('#cancel-transaction').onclick = close;
+  dialog.oncancel = event=>{if(busy) event.preventDefault();};
   const prod = queryElement('#transaction-product');
   const price = queryElement('#unit-price');
   const search = queryElement('#transaction-search');
@@ -644,10 +648,10 @@ function transaction(){
       form.elements.quantity.value = '1';
     }
     prod.value = product.id;
-    queryElement('#transaction-entry').hidden = false;
     queryElement('#transaction-selected').textContent = product.name;
     error.textContent = '';
     prod.onchange();
+    if(!dialog.open) dialog.showModal();
     queryElement('#quantity').focus();
   }
   results.onclick = event=>{
@@ -686,7 +690,9 @@ function transaction(){
     error.textContent = '';
     if(await saveCommand('movement',payload,form)){
       if(!form.isConnected || location.hash!=='#compras') return;
-      transaction();
+      dialog.close();
+      form.reset();
+      displayResults();
       toast('Reposição registrada e estoque atualizado.');
       queryElement('#transaction-search').focus();
     }

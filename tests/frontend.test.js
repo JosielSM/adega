@@ -7,7 +7,7 @@ import { webcrypto } from 'node:crypto';
 test('interface sends commands and reuses request ID after connection failure', async () => {
   const elements = new Map();
   const el = key => {
-    if (!elements.has(key)) elements.set(key, { textContent: '', innerHTML: '', style: {}, focus() {}, showModal() {}, close() {}, querySelector() { return { disabled: false }; } });
+    if (!elements.has(key)) elements.set(key, { textContent: '', innerHTML: '', style: {}, focus() {}, showModal() { this.open = true; }, close() { this.open = false; }, querySelector() { return { disabled: false }; } });
     return elements.get(key);
   };
   const calls = [];
@@ -57,7 +57,9 @@ test('interface sends commands and reuses request ID after connection failure', 
   el('#transaction-search').onkeydown({key:'Enter',preventDefault(){prevented=true;}});
   assert.equal(prevented,true);
   assert.equal(el('#transaction-product').value,'pack-product');
-  assert.equal(el('#transaction-entry').hidden,false);
+  assert.equal(el('#transaction-entry').open,true);
+  el('#cancel-transaction').onclick();
+  assert.equal(el('#transaction-entry').open,false);
   vm.runInContext("showReceipt({name:'Bebida',party:'<Cliente>',payment:'Pix',quantity:2,price:8,date:new Date()})",context);
   assert.match(el('#receipt-details').innerHTML,/&lt;Cliente&gt;/);
   assert.match(el('#receipt-details').innerHTML,/16,00/);

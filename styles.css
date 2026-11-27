@@ -303,7 +303,8 @@ main section.transaction-picker { min-height: 0; padding: 18px 20px; }
 #transaction-results th, #transaction-results td { padding: 10px 12px; }
 #transaction-results thead { position: sticky; top: 0; z-index: 1; }
 #transaction-results tbody th { background: white; color: var(--text); font-size: 13px; font-weight: 700; }
-#transaction-entry h2 { margin-bottom: 16px; overflow-wrap: anywhere; }
+#transaction-entry { max-height: 90dvh; overflow-y: auto; }
+#transaction-entry h2 { overflow-wrap: anywhere; }
 #transaction-error { color: #a74d3c; }
 .receipt-actions { flex-wrap: wrap; }
 
