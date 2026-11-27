@@ -102,7 +102,7 @@ content.addEventListener?.('click',event=>{
 });
 function compactList(items,limit,label){return items.slice(0,limit).join('')+(items.length>limit?`<details class="more-records"><summary>Ver mais ${items.length-limit} ${label}</summary>${items.slice(limit).join('')}</details>`:'')}
 function mobileProducts(list){return `<div class="mobile-records" aria-label="Lista de produtos">${compactList(list.map(p=>`<details class="record" data-record="${esc(p.id)}"><summary><span class="record-main"><strong>${esc(p.name)}</strong><span>${money(p.price)} · ${stockBreakdown(p)}</span></span>${p.active?stock(p):'<span class="pill out">Inativo</span>'}<span class="record-chevron" aria-hidden="true">⌄</span></summary><div class="record-body"><dl><div><dt>Categoria</dt><dd>${esc(p.category)}</dd></div><div><dt>Marca</dt><dd>${esc(p.brand||'Sem marca')}</dd></div><div><dt>Código</dt><dd>${esc(p.code||'Sem código')}</dd></div><div><dt>Custo</dt><dd>${money(p.cost)}</dd></div><div><dt>Venda por unidade</dt><dd>${money(p.price)}</dd></div>${p.pack_size>1?`<div><dt>${esc(p.pack_name)} (${p.pack_size} un.)</dt><dd>${p.pack_price?money(p.pack_price):'Preço não definido'}</dd></div>`:''}<div><dt>Estoque mínimo</dt><dd>${p.min} un.</dd></div></dl><div class="actions"><button class="secondary" data-edit="${p.id}">Editar produto</button><button class="secondary" data-toggle="${p.id}">${p.active?'Inativar':'Ativar'}</button><button class="danger" data-delete="${p.id}">Excluir produto</button></div><p class="record-hint">${p.active?'Inativar mantém o histórico e impede novas movimentações.':'Ative o produto para registrar compras e vendas.'}</p></div></details>`),8,'produtos')}</div>`}
-function mobileMovements(list){return `<div class="mobile-records" aria-label="Lista de movimentações">${compactList(list.map(m=>`<details class="record"><summary><span class="record-main"><strong>${esc(m.name)}</strong><span>${{sale:m.cancelledAt?'Venda cancelada':'Venda',purchase:'Compra',opening:'Estoque inicial'}[m.type]} · ${movementQuantity(m)}</span></span><strong class="record-total">${money(movementTotal(m))}</strong><span class="record-chevron" aria-hidden="true">⌄</span></summary><div class="record-body"><dl><div><dt>Data e hora</dt><dd>${date(m.date)}</dd></div><div><dt>Valor unitário</dt><dd>${money(m.price)}</dd></div><div><dt>Quantidade</dt><dd>${movementQuantity(m)}</dd></div><div><dt>${m.type==='sale'?'Cliente':'Fornecedor'}</dt><dd>${esc(m.party||'Não informado')}</dd></div>${m.payment?`<div><dt>Pagamento</dt><dd>${esc(m.payment)}</dd></div>`:''}</dl><div class="actions">${saleAction(m)}</div><p class="record-hint">${m.cancelledAt?'Quantidade devolvida ao estoque.':'Movimentação registrada. Cancelamentos preservam o histórico.'}</p></div></details>`),3,'movimentações')}</div>`}
+function mobileMovements(list){return `<div class="mobile-records" aria-label="Lista de movimentações">${compactList(list.map(m=>`<details class="record"><summary><span class="record-main"><strong>${esc(m.name)}</strong><span>${{sale:m.cancelledAt?'Venda cancelada':m.payment==='A receber'?'Venda em aberto':'Venda',purchase:'Compra',opening:'Estoque inicial'}[m.type]} · ${movementQuantity(m)}</span></span><strong class="record-total">${money(movementTotal(m))}</strong><span class="record-chevron" aria-hidden="true">⌄</span></summary><div class="record-body"><dl><div><dt>Data e hora</dt><dd>${date(m.date)}</dd></div><div><dt>Valor unitário</dt><dd>${money(m.price)}</dd></div><div><dt>Quantidade</dt><dd>${movementQuantity(m)}</dd></div><div><dt>${m.type==='sale'?'Cliente':'Fornecedor'}</dt><dd>${esc(m.party||'Não informado')}</dd></div>${m.payment?`<div><dt>Pagamento</dt><dd>${esc(m.payment)}</dd></div>`:''}</dl><div class="actions">${saleAction(m)}</div><p class="record-hint">${m.cancelledAt?'Quantidade devolvida ao estoque.':'Movimentação registrada. Cancelamentos preservam o histórico.'}</p></div></details>`),3,'movimentações')}</div>`}
 function stats(){const sales=db.movements.filter(m=>m.type==='sale'&&!m.cancelledAt);const revenue=sales.reduce((a,m)=>a+movementTotal(m),0);const profit=sales.reduce((a,m)=>a+movementTotal(m)-m.quantity*m.cost,0);return `<div class="stats"><div class="stat"><span class="stat-label">Receita de vendas</span><strong>${money(revenue)}</strong><small>${new Set(sales.map(sale=>sale.saleId || sale.id)).size} vendas registradas</small></div><div class="stat"><span class="stat-label">Lucro bruto</span><strong>${money(profit)}</strong><small>Receita menos custo das bebidas</small></div><div class="stat"><span class="stat-label">Unidades em estoque</span><strong>${db.products.reduce((a,p)=>a+p.stock,0)}</strong><small>${db.products.filter(p=>p.active).length} produtos ativos</small></div><div class="stat"><span class="stat-label">Valor do estoque</span><strong>${money(db.products.reduce((a,p)=>a+p.stock*p.cost,0))}</strong><small>Calculado pelo custo de aquisição</small></div></div>`}
 function groupedMovements(list){
   const sales = new Map();
@@ -122,7 +122,7 @@ function groupedMovements(list){
   for(const row of sales.values()) if(row.itemCount>1) row.name = `Venda com ${row.itemCount} itens`;
   return rows;
 }
-function movementTable(list,alreadyGrouped=false){if(!alreadyGrouped)list=groupedMovements(list);if(!list.length)return empty('Registre uma compra ou venda para acompanhar suas movimentações.');return mobileMovements(list)+`<div class="table-wrap desktop-records"><table><thead><tr><th>PRODUTO / DATA</th><th>TIPO</th><th>QUANTIDADE</th><th>TOTAL</th><th>AÇÕES / STATUS</th></tr></thead><tbody>${list.map(m=>`<tr><td class="product-name">${esc(m.name)}<small>${date(m.date)}${m.party?' · '+esc(m.party):''}</small></td><td><span class="pill ${m.type==='sale'?'':'low'}">${{sale:m.cancelledAt?'Venda cancelada':'Venda',purchase:'Compra',opening:'Estoque inicial'}[m.type]}</span></td><td>${movementQuantity(m)}</td><td>${money(movementTotal(m))}</td><td>${saleAction(m)}</td></tr>`).join('')}</tbody></table></div>`}
+function movementTable(list,alreadyGrouped=false){if(!alreadyGrouped)list=groupedMovements(list);if(!list.length)return empty('Registre uma compra ou venda para acompanhar suas movimentações.');return mobileMovements(list)+`<div class="table-wrap desktop-records"><table><thead><tr><th>PRODUTO / DATA</th><th>TIPO</th><th>QUANTIDADE</th><th>TOTAL</th><th>AÇÕES / STATUS</th></tr></thead><tbody>${list.map(m=>`<tr><td class="product-name">${esc(m.name)}<small>${date(m.date)}${m.party?' · '+esc(m.party):''}</small></td><td><span class="pill ${m.type==='sale'?'':'low'}">${{sale:m.cancelledAt?'Venda cancelada':m.payment==='A receber'?'Venda em aberto':'Venda',purchase:'Compra',opening:'Estoque inicial'}[m.type]}</span></td><td>${movementQuantity(m)}</td><td>${money(movementTotal(m))}</td><td>${saleAction(m)}</td></tr>`).join('')}</tbody></table></div>`}
 function panel(){const low=db.products.filter(p=>p.active&&p.stock<=p.min);content.innerHTML=heading('Seu negócio em um olhar','Acompanhe os números e cuide do que mais importa.','<a href="#vendas"><button>＋ Nova venda</button></a>')+stats()+`<div class="grid"><div class="card"><div class="card-head"><div><h2>Movimentações recentes</h2><p>As últimas entradas e saídas da sua distribuidora</p></div><a class="text-link" href="#historico">Ver todas ↗</a></div>${movementTable(groupedMovements([...db.movements].reverse()).slice(0,5),true)}</div><div><div class="card"><div class="card-head"><div><h2>Atenção ao estoque</h2><p>Produtos que precisam de reposição</p></div><span class="badge">${low.length} itens</span></div>${low.length?low.map(p=>`<div class="bar-row"><div class="bar-label"><span>${esc(p.name)}</span><div class="restock-actions"><b>${stockBreakdown(p)}</b><button class="secondary small" data-restock="${p.id}" aria-label="Repor estoque de ${esc(p.name)}">Repor estoque</button></div></div></div>`).join('')+'<div class="card-head"><a class="text-link" href="#compras">Registrar reposição ↗</a></div>':empty('Nenhum produto com estoque baixo.')}</div><div class="notice">Um estoque organizado faz a diferença. Cadastre suas bebidas e registre cada entrada e saída.</div></div></div>`}
 function products(){content.innerHTML=heading('Produtos e estoque','Todas as suas bebidas, organizadas em um só lugar.','<button id="new-product">＋ Novo produto</button>')+`<div class="card"><div class="card-head"><h2>Catálogo de bebidas</h2><span class="badge">${db.products.length} produtos</span></div><div class="toolbar"><input id="search" aria-label="Buscar produto" placeholder="Buscar por nome, código ou marca…"><select id="category-filter" aria-label="Categoria"><option value="">Todas as categorias</option>${categories.map(c=>`<option>${c}</option>`).join('')}</select></div><div id="product-table"></div></div>`;document.querySelector('#new-product').onclick=()=>productModal();document.querySelector('#search').oninput=productRows;document.querySelector('#category-filter').onchange=productRows;productRows()}
 const categories=['Cervejas','Vinhos','Destilados','Espumantes','Refrigerantes','Águas','Energéticos','Sucos','Outros'];
@@ -159,7 +159,7 @@ function showReceipt(sale){
   document.querySelector('#receipt-details').innerHTML = `
     <div class="receipt-header">
       <strong>${esc(company)}</strong>
-      <h2 id="receipt-title">Comprovante de venda</h2>
+      <h2 id="receipt-title">${sale.payment==='A receber'?'Nota em aberto':'Comprovante de venda'}</h2>
       <p>Documento não fiscal</p>
     </div>
     <div class="receipt-meta">
@@ -176,7 +176,8 @@ function showReceipt(sale){
       </div></li>`;
     }).join('')}</ul>
     <div class="receipt-total"><strong>Total</strong><strong>${money(total)}</strong></div>
-    <p>Pagamento: ${esc(sale.payment || 'Não informado')}</p>`;
+    <p>${sale.payment==='A receber'?'Saldo a receber: '+money(total):'Pagamento: '+esc(sale.payment || 'Não informado')}</p>
+    ${sale.paidAt?`<p>Recebido em ${date(sale.paidAt)}</p>`:''}`;
   const dialog = document.querySelector('#sale-receipt');
   const width = document.querySelector('#receipt-width');
   document.querySelector('#print-receipt').onclick = ()=>{
@@ -187,10 +188,72 @@ function showReceipt(sale){
 }
 
 
+function customerModal(){
+  const modal = document.querySelector('#modal');
+  const form = document.querySelector('#modal-form');
+  document.querySelector('#modal-title').textContent = 'Clientes';
+  const fields = document.querySelector('#modal-fields');
+  fields.innerHTML = `<div class="form-grid">${field('Nome','name','','text','required maxlength="150"')}${field('Telefone (opcional)','phone','','tel','maxlength="30"')}</div>
+    <h3>Clientes cadastrados</h3><ul class="pos-customer-list">${(db.customers || []).map(c=>`<li><strong>${esc(c.name)}</strong> ${esc(c.phone)}</li>`).join('') || '<li>Nenhum cliente cadastrado.</li>'}</ul>`;
+  document.querySelector('#form-error').textContent = '';
+  const submit = form.querySelector('button[type=submit]');
+  submit.hidden = false;
+  submit.textContent = 'Cadastrar cliente';
+  form.onsubmit = async event=>{
+    event.preventDefault();
+    const name = form.elements.name.value.trim();
+    if(!name) return;
+    if(await saveCommand('customer_save',{name,phone:form.elements.phone.value.trim()},form)){
+      modal.close();
+      render();
+      toast('Cliente cadastrado.');
+    }
+  };
+  modal.showModal();
+}
+function receivablesModal(){
+  const modal = document.querySelector('#modal');
+  const form = document.querySelector('#modal-form');
+  const fields = document.querySelector('#modal-fields');
+  const pending = groupedMovements([...db.movements].reverse().filter(m=>m.saleId&&m.payment==='A receber'&&!m.cancelledAt));
+  document.querySelector('#modal-title').textContent = 'Vendas em aberto';
+  document.querySelector('#form-error').textContent = '';
+  const submit = form.querySelector('button[type=submit]');
+  submit.hidden = false;
+  submit.textContent = 'Registrar recebimento';
+  fields.innerHTML = `<label>Buscar por cliente ou referência<input id="open-sales-search" type="search" autocomplete="off"></label>
+    <div id="open-sales-results" class="table-wrap"></div>
+    <label>Forma de recebimento<select name="method"><option>Pix</option><option>Dinheiro</option><option>Cartão de débito</option><option>Cartão de crédito</option></select></label>`;
+  const search = fields.querySelector('#open-sales-search');
+  const results = fields.querySelector('#open-sales-results');
+  const paint = ()=>{
+    const term = search.value.trim().toLowerCase();
+    const rows = pending.filter(m=>[m.party,m.saleId].some(value=>value.toLowerCase().includes(term)));
+    results.innerHTML = rows.length?`<table><thead><tr><th>Selecionar</th><th>Cliente</th><th>Data</th><th>Total</th></tr></thead><tbody>${rows.map(m=>`<tr>
+      <td><input type="radio" name="ticket" value="${esc(m.saleId)}" aria-label="Venda de ${esc(m.party)}, ${money(movementTotal(m))}"></td>
+      <td>${esc(m.party)}<small> · ${esc(m.saleId.slice(0,8))}</small></td><td>${date(m.date)}</td><td>${money(movementTotal(m))}</td>
+    </tr>`).join('')}</tbody></table>`:'<p>Nenhuma venda em aberto encontrada.</p>';
+  };
+  search.oninput = paint;
+  paint();
+  form.onsubmit = async event=>{
+    event.preventDefault();
+    const id = fields.querySelector('input[name=ticket]:checked')?.value;
+    if(!id){document.querySelector('#form-error').textContent='Selecione uma venda em aberto.';return;}
+    if(await saveCommand('receive_sale',{id,payment:form.elements.method.value},form)){
+      modal.close();
+      const sale = db.movements.find(m=>m.saleId===id);
+      if(sale) showReceipt(sale);
+      toast('Recebimento registrado.');
+    }
+  };
+  modal.showModal();
+}
+
 function pointOfSale(){
   const cash = savedCash();
-  const draft = checkoutDraft ??= {items:[],party:'',payment:'Pix',pending:null};
-  content.innerHTML = heading('Vendas','', '<button class="secondary" type="button" id="pos-new-product">Cadastrar produto</button>') + `
+  const draft = checkoutDraft ??= {items:[],party:'',customerId:'',payment:'Pix',pending:null};
+  content.innerHTML = heading('Vendas','', '<div class="actions"><button class="secondary" id="pos-customers">Clientes</button><button class="secondary" id="pos-receivables">Em aberto</button></div>') + `
     <div class="pos-cash">
       <form id="pos-cash" class="actions">
         ${field('Caixa inicial (R$)','amount',cash,'number','required min="0" max="9999999999.99" step="0.01"')}
@@ -200,18 +263,19 @@ function pointOfSale(){
     </div>
     <div class="pos-grid">
       <div class="card pos-products">
-        <h2>Produtos</h2>
+        <div class="pos-panel-title"><h2>Produtos</h2><button class="secondary small" type="button" id="pos-new-product">Cadastrar produto</button></div>
         <label for="pos-search">Código de barras ou nome</label>
         <input id="pos-search" type="search" autocomplete="off" placeholder="Escaneie ou digite para buscar">
         <p id="pos-search-status" role="status"></p>
         <div id="pos-results" class="table-wrap"></div>
       </div>
       <form id="pos-checkout" class="card pos-checkout">
-        <h2>Venda atual</h2>
+        <div class="pos-panel-title"><h2>Itens da venda</h2><span id="pos-count" aria-live="polite">0 itens</span></div>
         <div id="pos-cart" class="table-wrap"></div>
         <div class="form-summary"><span>Total a pagar</span><strong id="pos-total" aria-live="polite">${money(0)}</strong></div>
+        <label>Vincular cliente<select name="customerId"><option value="">Digitar nome</option>${(db.customers || []).map(c=>`<option value="${esc(c.id)}">${esc(c.name)}${c.phone?' · '+esc(c.phone):''}</option>`).join('')}</select></label>
         ${field('Nome do cliente','party',draft.party,'text','required maxlength="150" autocomplete="off"')}
-        <label>Pagamento<select name="payment"><option>Pix</option><option>Dinheiro</option><option>Cartão de débito</option><option>Cartão de crédito</option></select></label>
+        <label>Pagamento<select name="payment"><option>Pix</option><option>Dinheiro</option><option>Cartão de débito</option><option>Cartão de crédito</option><option>A receber</option></select></label>
         <p id="pos-feedback" role="alert"></p>
         <button id="pos-finish" type="submit">Finalizar venda e gerar comprovante</button>
       </form>
@@ -223,13 +287,29 @@ function pointOfSale(){
   const cart = find('#pos-cart');
   const feedback = find('#pos-feedback');
   const items = draft.items;
-  if(form.elements) form.elements.payment.value = draft.payment;
+  if(form.elements){
+    form.elements.payment.value = draft.payment;
+    form.elements.customerId.value = draft.customerId;
+    form.elements.party.readOnly = Boolean(draft.customerId);
+  }
+  find('#pos-customers').onclick = customerModal;
+  find('#pos-receivables').onclick = receivablesModal;
   const normalized = value=>String(value ?? '').normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase();
   const activeProducts = ()=>db.products.filter(product=>product.active);
 
   form.oninput = event=>{
     if(event.target.name==='party') draft.party = event.target.value;
-    if(event.target.name==='payment') draft.payment = event.target.value;
+    if(event.target.name==='payment'){
+      draft.payment = event.target.value;
+      updateTotal();
+    }
+    if(event.target.name==='customerId'){
+      draft.customerId = event.target.value;
+      const customer = (db.customers || []).find(c=>c.id===draft.customerId);
+      if(customer) draft.party = customer.name;
+      form.elements.party.value = draft.party;
+      form.elements.party.readOnly = Boolean(customer);
+    }
   };
   find('#pos-new-product').onclick = ()=>productModal(undefined,paintResults);
   find('#pos-cash').onsubmit = event=>{
@@ -272,8 +352,9 @@ function pointOfSale(){
   function updateTotal(){
     const cents = items.reduce((sum,item)=>sum+item.quantity*Math.round(item.price*100),0);
     find('#pos-total').textContent = money(cents/100);
+    find('#pos-count').textContent = items.reduce((sum,item)=>sum+item.quantity,0)+' itens';
     find('#pos-finish').disabled = !items.length;
-    find('#pos-finish').textContent = draft.pending?'Confirmar situação da venda':'Finalizar venda e gerar comprovante';
+    find('#pos-finish').textContent = draft.pending?'Confirmar situação da venda':draft.payment==='A receber'?'Salvar nota em aberto':'Finalizar venda e gerar comprovante';
   }
   function setQuantity(item, quantity){
     const product = activeProducts().find(p=>p.id===item.id);
@@ -342,7 +423,7 @@ function pointOfSale(){
     const party = draft.pending?.payload.party ?? form.elements.party.value.trim();
     if(!party){feedback.textContent='Informe o nome do cliente.';form.elements.party.focus();return;}
     const payment = form.elements.payment.value;
-    const payload = draft.pending?.payload ?? {party,payment,items:items.map(({id,mode,quantity,price})=>({id,mode,quantity,price}))};
+    const payload = draft.pending?.payload ?? {party,payment,customerId:draft.customerId,items:items.map(({id,mode,quantity,price})=>({id,mode,quantity,price}))};
     if(draft.pending) form.adegaCommand = draft.pending.command;
     const submission = saveCommand('checkout',payload,form);
     const command = form.adegaCommand;
@@ -354,6 +435,7 @@ function pointOfSale(){
     if(saved){
       items.length = 0;
       draft.party = '';
+      draft.customerId = '';
       draft.payment = 'Pix';
     }
     const activeForm = find('#pos-checkout');
@@ -371,6 +453,8 @@ function pointOfSale(){
       return;
     }
     form.elements.party.value = '';
+    form.elements.party.readOnly = false;
+    form.elements.customerId.value = '';
     form.elements.payment.value = 'Pix';
     feedback.textContent = '';
     paintCart();
@@ -378,7 +462,7 @@ function pointOfSale(){
     search.focus();
     const lines = db.movements.filter(m=>m.saleId===command.requestId);
     if(lines.length) showReceipt(lines[0]);
-    toast('Venda registrada.');
+    toast(payment==='A receber'?'Nota em aberto registrada.':'Venda registrada.');
   };
   function setCheckoutEditing(enabled){
     for(const control of form.querySelectorAll('input,select,[data-remove]')) control.disabled = !enabled;
@@ -521,7 +605,7 @@ function transaction(){
 }
 
 
-function movementHistory(){content.innerHTML=heading('Movimentações','O histórico de entradas e saídas da sua distribuidora.','<button class="secondary" id="export-csv">Exportar CSV ↓</button>')+`<div class="card"><div class="card-head"><h2>Histórico completo</h2><span class="badge">${db.movements.length} registros</span></div><div class="toolbar"><select id="type-filter" aria-label="Tipo de movimentação"><option value="">Todos os tipos</option><option value="sale">Vendas</option><option value="purchase">Compras</option><option value="opening">Estoque inicial</option></select><input type="date" id="from-date" aria-label="Data inicial"><input type="date" id="to-date" aria-label="Data final"></div><div id="history-table"></div></div>`;const filter=()=>{const type=document.querySelector('#type-filter').value;const from=document.querySelector('#from-date').value;const to=document.querySelector('#to-date').value;return [...db.movements].reverse().filter(m=>{const day=new Date(m.date);const local=[day.getFullYear(),String(day.getMonth()+1).padStart(2,'0'),String(day.getDate()).padStart(2,'0')].join('-');return(!type||m.type===type)&&(!from||local>=from)&&(!to||local<=to)})};document.querySelectorAll('.toolbar input,.toolbar select').forEach(el=>el.onchange=()=>document.querySelector('#history-table').innerHTML=movementTable(filter()));document.querySelector('#history-table').innerHTML=movementTable(filter());document.querySelector('#export-csv').onclick=()=>{const cell=v=>'"'+String(v).replace(/^[=+@-]/,"'$&").replace(/"/g,'""')+'"';download('Distribuidora-movimentacoes.csv','\uFEFF'+[['Data','Tipo','Status','Produto','Quantidade','Valor unitário','Total','Cliente/Fornecedor','Pagamento'],...filter().map(m=>[date(m.date),{sale:m.cancelledAt?'Venda cancelada':'Venda',purchase:'Compra',opening:'Estoque inicial'}[m.type],m.cancelledAt?'Cancelada':'Confirmada',m.name,m.quantity,m.price,movementTotal(m),m.party,m.payment||''])].map(row=>row.map(cell).join(';')).join('\r\n'),'text/csv;charset=utf-8')}}
+function movementHistory(){content.innerHTML=heading('Movimentações','O histórico de entradas e saídas da sua distribuidora.','<button class="secondary" id="export-csv">Exportar CSV ↓</button>')+`<div class="card"><div class="card-head"><h2>Histórico completo</h2><span class="badge">${db.movements.length} registros</span></div><div class="toolbar"><select id="type-filter" aria-label="Tipo de movimentação"><option value="">Todos os tipos</option><option value="sale">Vendas</option><option value="purchase">Compras</option><option value="opening">Estoque inicial</option></select><input type="date" id="from-date" aria-label="Data inicial"><input type="date" id="to-date" aria-label="Data final"></div><div id="history-table"></div></div>`;const filter=()=>{const type=document.querySelector('#type-filter').value;const from=document.querySelector('#from-date').value;const to=document.querySelector('#to-date').value;return [...db.movements].reverse().filter(m=>{const day=new Date(m.date);const local=[day.getFullYear(),String(day.getMonth()+1).padStart(2,'0'),String(day.getDate()).padStart(2,'0')].join('-');return(!type||m.type===type)&&(!from||local>=from)&&(!to||local<=to)})};document.querySelectorAll('.toolbar input,.toolbar select').forEach(el=>el.onchange=()=>document.querySelector('#history-table').innerHTML=movementTable(filter()));document.querySelector('#history-table').innerHTML=movementTable(filter());document.querySelector('#export-csv').onclick=()=>{const cell=v=>'"'+String(v).replace(/^[=+@-]/,"'$&").replace(/"/g,'""')+'"';download('Distribuidora-movimentacoes.csv','\uFEFF'+[['Data','Tipo','Status','Produto','Quantidade','Valor unitário','Total','Cliente/Fornecedor','Pagamento'],...filter().map(m=>[date(m.date),{sale:m.cancelledAt?'Venda cancelada':m.payment==='A receber'?'Venda em aberto':'Venda',purchase:'Compra',opening:'Estoque inicial'}[m.type],m.cancelledAt?'Cancelada':'Confirmada',m.name,m.quantity,m.price,movementTotal(m),m.party,m.payment||''])].map(row=>row.map(cell).join(';')).join('\r\n'),'text/csv;charset=utf-8')}}
 function download(name,data,type){const url=URL.createObjectURL(new Blob([data],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
 function reports(){const sales=db.movements.filter(m=>m.type==='sale'&&!m.cancelledAt);const ranking=[...new Set(sales.map(m=>m.productId))].map(id=>({name:db.products.find(p=>p.id===id)?.name||sales.find(m=>m.productId===id).name,total:sales.filter(m=>m.productId===id).reduce((a,m)=>a+m.quantity,0)})).filter(p=>p.total).sort((a,b)=>b.total-a.total).slice(0,5);const days=Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-6+i);const key=d.toLocaleDateString('pt-BR');return {label:d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}),value:sales.filter(m=>new Date(m.date).toLocaleDateString('pt-BR')===key).reduce((a,m)=>a+movementTotal(m),0)}});const max=Math.max(1,...days.map(d=>d.value));content.innerHTML=heading('Relatórios','Entenda os resultados e planeje os próximos passos.')+stats()+`<div class="grid"><div class="card"><div class="card-head"><div><h2>Vendas nos últimos 7 dias</h2><p>Receita diária em reais</p></div></div><div class="chart"><div class="chart-columns">${days.map(d=>`<div class="chart-column" style="height:${Math.max(1,d.value/max*100)}%" title="${d.label}: ${money(d.value)}"><span>${d.label}</span></div>`).join('')}</div></div></div><div class="card"><div class="card-head"><h2>Bebidas mais vendidas</h2></div>${ranking.length?ranking.map(p=>`<div class="bar-row"><div class="bar-label"><span>${esc(p.name)}</span><b>${p.total} un.</b></div><div class="bar"><span style="width:${p.total/ranking[0].total*100}%"></span></div></div>`).join(''):empty('Registre vendas para visualizar os destaques.')}</div></div><div class="card"><div class="card-head"><div><h2>Backup dos dados</h2><p>Exporte uma cópia dos registros. A restauração do banco é feita pelo administrador no Supabase.</p></div><div class="actions"><button class="secondary" id="backup">Baixar backup ↓</button></div></div></div><div class="notice">Os indicadores consideram todo o histórico. Lucro bruto não inclui despesas operacionais, taxas ou impostos.</div>`;document.querySelector('#backup').onclick=()=>download('Distribuidora-backup-'+new Date().toISOString().slice(0,10)+'.json',JSON.stringify(db,null,2),'application/json')}
 function animatePage(){if(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)return;for(const element of [content]){if(element.hidden||!element.animate)continue;element.getAnimations().forEach(animation=>animation.cancel());element.animate([{opacity:.35,transform:'translateY(8px)'},{opacity:1,transform:'translateY(0)'}],{duration:280,easing:'cubic-bezier(.2,.7,.2,1)'});}}

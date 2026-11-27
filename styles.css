@@ -361,3 +361,19 @@ main section.transaction-picker { min-height: 0; padding: 18px 20px; }
   #sale-receipt[open][data-width="58"] { width: 48mm; }
   #sale-receipt h2 { font-family: inherit; font-size: 10pt; }
 }
+
+.pos-panel-title { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:14px; }
+.pos-panel-title h2 { margin:0; }
+.pos-panel-title span { color:var(--muted); font-size:.85rem; }
+.pos-products { background:#eef4f8; }
+.pos-checkout { border-top:4px solid var(--green); }
+#pos-cart { min-height:180px; }
+#pos-cart > p { margin:0; padding:56px 12px; text-align:center; color:var(--muted); border:1px dashed #c2d2dc; border-radius:8px; }
+.pos-checkout .form-summary { background:#eaf2f7; padding:12px 16px; border-radius:8px; }
+#pos-total { font-size:clamp(1.35rem,2.8vw,2.15rem); font-variant-numeric:tabular-nums; }
+#open-sales-results, .pos-customer-list { max-height:44vh; overflow:auto; }
+#open-sales-results input { width:auto; }
+@media (min-width:1041px) {
+  .pos-grid { grid-template-columns:minmax(0, .85fr) minmax(0, 1.45fr); }
+  .pos-checkout { position:sticky; top:14px; }
+}
