@@ -132,20 +132,10 @@ footer{margin-bottom:72px}
 }
 @media(display-mode:standalone){.install-app{display:none}}
 
-#menu-toggle{display:none}
+
 @media(max-width:700px){
  body:not(.auth-mode){padding-top:calc(78px + env(safe-area-inset-top))}
  aside{position:fixed;inset:0 0 auto;width:100%;height:calc(78px + env(safe-area-inset-top));padding:calc(14px + env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 14px max(16px,env(safe-area-inset-left));display:flex;align-items:center;justify-content:space-between;overflow:visible;z-index:20;box-shadow:0 3px 16px #12263620}
- #menu-toggle{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;width:46px;height:46px;padding:10px;background:#ffffff0d;border:1px solid #ffffff25;color:#fff;flex-shrink:0}
- #menu-toggle span{display:block;width:23px;height:2px;border-radius:2px;background:currentColor;transition:transform .18s,opacity .18s}
- .menu-open #menu-toggle span:first-child{transform:translateY(7px) rotate(45deg)}
- .menu-open #menu-toggle span:nth-child(2){opacity:0}
- .menu-open #menu-toggle span:last-child{transform:translateY(-7px) rotate(-45deg)}
- aside nav{display:none;position:absolute;inset:100% 0 auto;margin:0;padding:12px max(16px,env(safe-area-inset-right)) 16px max(16px,env(safe-area-inset-left));background:#122636;border-bottom:3px solid #aa7c55;box-shadow:0 12px 20px #12263630;max-height:calc(100svh - 78px - env(safe-area-inset-top));overflow-y:auto;scrollbar-width:thin}
- .menu-open aside nav{display:grid;gap:5px}
- aside nav a{min-height:48px;padding:14px;white-space:normal}
- aside nav a span{font-size:14px}
- aside nav a.active{box-shadow:inset 3px 0 #c99a70}
  html{scroll-padding-top:calc(94px + env(safe-area-inset-top))}
 }
 
@@ -376,4 +366,46 @@ main section.transaction-picker { min-height: 0; padding: 18px 20px; }
 @media (min-width:1041px) {
   .pos-grid { grid-template-columns:minmax(0, .85fr) minmax(0, 1.45fr); }
   .pos-checkout { position:sticky; top:14px; }
+}
+
+#menu-toggle{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;width:46px;height:46px;padding:10px;background:#ffffff0d;border:1px solid #ffffff25;color:#fff;flex-shrink:0}
+ #menu-toggle span{display:block;width:23px;height:2px;border-radius:2px;background:currentColor;transition:transform .18s,opacity .18s}
+ .menu-open #menu-toggle span:first-child{transform:translateY(7px) rotate(45deg)}
+ .menu-open #menu-toggle span:nth-child(2){opacity:0}
+ .menu-open #menu-toggle span:last-child{transform:translateY(-7px) rotate(-45deg)}
+ .app-bar #navigation{display:none;position:absolute;inset:100% auto auto 0;width:min(320px,100vw);margin:0;padding:12px max(16px,env(safe-area-inset-right)) 16px max(16px,env(safe-area-inset-left));background:#122636;border-bottom:3px solid #aa7c55;box-shadow:0 12px 20px #12263630;max-height:calc(100svh - 78px - env(safe-area-inset-top));overflow-y:auto;scrollbar-width:thin}
+ .menu-open .app-bar #navigation{display:grid;gap:5px}
+ aside nav a{min-height:48px;padding:14px;white-space:normal}
+ aside nav a span{font-size:14px}
+ aside nav a.active{box-shadow:inset 3px 0 #c99a70}
+
+/* The checkout uses a top bar. The navigation opens over the page. */
+body > .app-bar {
+  position: sticky;
+  inset: 0 0 auto;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  padding: 9px clamp(16px, 3vw, 42px);
+  overflow: visible;
+}
+.app-bar .brand { order: 1; min-width: 0; font-size: 22px; }
+.app-bar #menu-toggle { width: 44px; height: 44px; }
+body > main { margin-left: 0; }
+body:has(#pos-checkout) main > footer,
+body:has(#pos-checkout) #install-app { display: none; }
+body:not(.auth-mode) #bottom-navigation { display: none; }
+body:has(#pos-checkout) .pos-checkout { top: 80px; }
+@media (min-width: 701px) {
+  body > main > header { min-height: 40px; height: auto; padding-block: 7px; }
+  body > main > header .eyebrow, #today { display: none; }
+}
+@media (max-width: 700px) {
+  body > .app-bar { position: fixed; justify-content: flex-start; padding-top: calc(14px + env(safe-area-inset-top)); }
+  body > .app-bar .brand { max-width: calc(100% - 112px); }
+  #account-tools { right: 16px; }
+  #profile-menu { right: 0; }
 }
